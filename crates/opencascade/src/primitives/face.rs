@@ -449,6 +449,26 @@ impl Face {
             }
         }
     }
+
+    /// Get the parametric bounds of this face.
+    ///
+    /// Returns `(u_min, u_max, v_min, v_max)` representing the parameter space
+    /// of the underlying surface trimmed to this face.
+    ///
+    /// For cylindrical surfaces:
+    /// - U is the angular parameter (in radians)
+    /// - V is the axial parameter (along the cylinder axis)
+    ///
+    /// The angular extent of a cylindrical face is `u_max - u_min`.
+    pub fn parametric_bounds(&self) -> (f64, f64, f64, f64) {
+        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, true);
+        (
+            surface.FirstUParameter(),
+            surface.LastUParameter(),
+            surface.FirstVParameter(),
+            surface.LastVParameter(),
+        )
+    }
 }
 
 pub struct CompoundFace {
