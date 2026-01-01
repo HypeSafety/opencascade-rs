@@ -647,6 +647,24 @@ pub mod ffi {
         pub fn gp_Cone_Location(cone: &gp_Cone) -> UniquePtr<gp_Pnt>;
         pub fn gp_Cone_Position(cone: &gp_Cone) -> UniquePtr<gp_Ax3>;
 
+        // gp_Sphere - Spherical surface geometry
+        type gp_Sphere;
+
+        pub fn BRepAdaptor_Surface_Sphere(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Sphere>;
+        pub fn Radius(self: &gp_Sphere) -> f64;
+        pub fn gp_Sphere_Location(sphere: &gp_Sphere) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Sphere_Position(sphere: &gp_Sphere) -> UniquePtr<gp_Ax3>;
+
+        // gp_Torus - Toroidal surface geometry
+        type gp_Torus;
+
+        pub fn BRepAdaptor_Surface_Torus(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Torus>;
+        pub fn MajorRadius(self: &gp_Torus) -> f64;
+        pub fn MinorRadius(self: &gp_Torus) -> f64;
+        pub fn gp_Torus_Location(torus: &gp_Torus) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Torus_Axis(torus: &gp_Torus) -> UniquePtr<gp_Ax1>;
+        pub fn gp_Torus_Position(torus: &gp_Torus) -> UniquePtr<gp_Ax3>;
+
         // gp_Ax3 additional methods
         pub fn gp_Ax3_Location(axis: &gp_Ax3) -> UniquePtr<gp_Pnt>;
         pub fn gp_Ax3_Direction(axis: &gp_Ax3) -> UniquePtr<gp_Dir>;
@@ -1076,6 +1094,8 @@ pub mod ffi {
 
         #[cxx_name = "construct_unique"]
         pub fn gp_Ax1_ctor(origin: &gp_Pnt, main_dir: &gp_Dir) -> UniquePtr<gp_Ax1>;
+        pub fn gp_Ax1_Location(axis: &gp_Ax1) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Ax1_Direction(axis: &gp_Ax1) -> UniquePtr<gp_Dir>;
 
         #[cxx_name = "construct_unique"]
         pub fn gp_Ax2_ctor(origin: &gp_Pnt, main_dir: &gp_Dir) -> UniquePtr<gp_Ax2>;

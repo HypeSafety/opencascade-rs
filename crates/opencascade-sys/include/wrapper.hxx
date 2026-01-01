@@ -92,6 +92,8 @@
 #include <gp_Cylinder.hxx>
 #include <gp_Lin.hxx>
 #include <gp_Pln.hxx>
+#include <gp_Sphere.hxx>
+#include <gp_Torus.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -252,6 +254,14 @@ inline const gp_Dir &gp_DZ() { return gp::DZ(); }
 
 inline std::unique_ptr<gp_Ax1> gp_Ax1_ctor(const gp_Pnt &origin, const gp_Dir &main_dir) {
   return std::unique_ptr<gp_Ax1>(new gp_Ax1(origin, main_dir));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Ax1_Location(const gp_Ax1 &axis) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(axis.Location()));
+}
+
+inline std::unique_ptr<gp_Dir> gp_Ax1_Direction(const gp_Ax1 &axis) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(axis.Direction()));
 }
 
 inline std::unique_ptr<gp_Ax2> gp_Ax2_ctor(const gp_Pnt &origin, const gp_Dir &main_dir) {
@@ -613,6 +623,36 @@ inline std::unique_ptr<gp_Pnt> gp_Cone_Location(const gp_Cone &cone) {
 
 inline std::unique_ptr<gp_Ax3> gp_Cone_Position(const gp_Cone &cone) {
   return std::unique_ptr<gp_Ax3>(new gp_Ax3(cone.Position()));
+}
+
+// gp_Sphere - Spherical surface
+inline std::unique_ptr<gp_Sphere> BRepAdaptor_Surface_Sphere(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Sphere>(new gp_Sphere(surface.Sphere()));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Sphere_Location(const gp_Sphere &sphere) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(sphere.Location()));
+}
+
+inline std::unique_ptr<gp_Ax3> gp_Sphere_Position(const gp_Sphere &sphere) {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(sphere.Position()));
+}
+
+// gp_Torus - Toroidal surface
+inline std::unique_ptr<gp_Torus> BRepAdaptor_Surface_Torus(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Torus>(new gp_Torus(surface.Torus()));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Torus_Location(const gp_Torus &torus) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(torus.Location()));
+}
+
+inline std::unique_ptr<gp_Ax1> gp_Torus_Axis(const gp_Torus &torus) {
+  return std::unique_ptr<gp_Ax1>(new gp_Ax1(torus.Axis()));
+}
+
+inline std::unique_ptr<gp_Ax3> gp_Torus_Position(const gp_Torus &torus) {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(torus.Position()));
 }
 
 // gp_Ax3 methods

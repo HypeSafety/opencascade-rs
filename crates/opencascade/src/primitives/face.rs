@@ -357,6 +357,98 @@ impl Face {
 
         Wire { inner }
     }
+
+    /// Get the underlying surface type of this face.
+    ///
+    /// This method analyzes the geometric surface that defines this topological
+    /// face and returns detailed information about its type and parameters.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use opencascade::primitives::{Face, SurfaceType};
+    ///
+    /// // For sheet metal applications, check if a face is a bend:
+    /// fn is_bend(face: &Face) -> bool {
+    ///     matches!(face.surface_type(), SurfaceType::Cylinder { .. })
+    /// }
+    /// ```
+    pub fn surface_type(&self) -> SurfaceType {
+        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, true);
+        let surface_type = surface.GetType();
+
+        match surface_type {
+            ffi::GeomAbs_SurfaceType::GeomAbs_Plane => {
+                let plane = ffi::BRepAdaptor_Surface_Plane(&surface);
+                let position = ffi::gp_Pln_Position(&plane);
+                let location = ffi::gp_Ax3_Location(&position);
+                let direction = ffi::gp_Ax3_Direction(&position);
+
+                SurfaceType::Plane {
+                    origin: dvec3(location.X(), location.Y(), location.Z()),
+                    normal: dvec3(direction.X(), direction.Y(), direction.Z()),
+                }
+            }
+            ffi::GeomAbs_SurfaceType::GeomAbs_Cylinder => {
+                let cylinder = ffi::BRepAdaptor_Surface_Cylinder(&surface);
+                let axis = ffi::gp_Cylinder_Axis(&cylinder);
+                let location = ffi::gp_Ax1_Location(&axis);
+                let direction = ffi::gp_Ax1_Direction(&axis);
+
+                SurfaceType::Cylinder {
+                    axis_origin: dvec3(location.X(), location.Y(), location.Z()),
+                    axis_direction: dvec3(direction.X(), direction.Y(), direction.Z()),
+                    radius: cylinder.Radius(),
+                }
+            }
+            ffi::GeomAbs_SurfaceType::GeomAbs_Cone => {
+                let cone = ffi::BRepAdaptor_Surface_Cone(&surface);
+                let apex = ffi::gp_Cone_Apex(&cone);
+                let axis = ffi::gp_Cone_Axis(&cone);
+                let location = ffi::gp_Ax1_Location(&axis);
+                let direction = ffi::gp_Ax1_Direction(&axis);
+
+                SurfaceType::Cone {
+                    apex: dvec3(apex.X(), apex.Y(), apex.Z()),
+                    axis_origin: dvec3(location.X(), location.Y(), location.Z()),
+                    axis_direction: dvec3(direction.X(), direction.Y(), direction.Z()),
+                    semi_angle: cone.SemiAngle(),
+                    ref_radius: cone.RefRadius(),
+                }
+            }
+            ffi::GeomAbs_SurfaceType::GeomAbs_Sphere => {
+                let sphere = ffi::BRepAdaptor_Surface_Sphere(&surface);
+                let location = ffi::gp_Sphere_Location(&sphere);
+
+                SurfaceType::Sphere {
+                    center: dvec3(location.X(), location.Y(), location.Z()),
+                    radius: sphere.Radius(),
+                }
+            }
+            ffi::GeomAbs_SurfaceType::GeomAbs_Torus => {
+                let torus = ffi::BRepAdaptor_Surface_Torus(&surface);
+                let location = ffi::gp_Torus_Location(&torus);
+                let axis = ffi::gp_Torus_Axis(&torus);
+                let direction = ffi::gp_Ax1_Direction(&axis);
+
+                SurfaceType::Torus {
+                    center: dvec3(location.X(), location.Y(), location.Z()),
+                    axis_direction: dvec3(direction.X(), direction.Y(), direction.Z()),
+                    major_radius: torus.MajorRadius(),
+                    minor_radius: torus.MinorRadius(),
+                }
+            }
+            ffi::GeomAbs_SurfaceType::GeomAbs_BezierSurface => SurfaceType::Bezier,
+            ffi::GeomAbs_SurfaceType::GeomAbs_BSplineSurface => SurfaceType::BSpline,
+            ffi::GeomAbs_SurfaceType::GeomAbs_SurfaceOfRevolution => SurfaceType::Revolution,
+            ffi::GeomAbs_SurfaceType::GeomAbs_SurfaceOfExtrusion => SurfaceType::Extrusion,
+            ffi::GeomAbs_SurfaceType::GeomAbs_OffsetSurface => SurfaceType::Offset,
+            ffi::GeomAbs_SurfaceType::GeomAbs_OtherSurface => SurfaceType::Other,
+            ffi::GeomAbs_SurfaceType { repr } => {
+                panic!("GeomAbs_SurfaceType had an unrepresentable value: {repr}")
+            }
+        }
+    }
 }
 
 pub struct CompoundFace {
@@ -505,6 +597,87 @@ impl From<ffi::TopAbs_Orientation> for FaceOrientation {
     }
 }
 
+/// The underlying geometric surface type of a face.
+///
+/// This enum provides access to the parametric surface definition that
+/// underlies a topological face. For sheet metal applications, the most
+/// relevant types are:
+/// - [`SurfaceType::Plane`] - flat faces
+/// - [`SurfaceType::Cylinder`] - bend surfaces
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceType {
+    /// A planar surface defined by an origin point and a normal direction.
+    Plane {
+        /// A point on the plane (the plane's origin in its local coordinate system).
+        origin: DVec3,
+        /// The normal vector perpendicular to the plane.
+        normal: DVec3,
+    },
+
+    /// A cylindrical surface defined by an axis and radius.
+    /// Common for bends in sheet metal parts.
+    Cylinder {
+        /// Origin point of the cylinder axis.
+        axis_origin: DVec3,
+        /// Direction of the cylinder axis.
+        axis_direction: DVec3,
+        /// Radius of the cylinder.
+        radius: f64,
+    },
+
+    /// A conical surface defined by an apex, axis, and half-angle.
+    Cone {
+        /// The apex (tip) of the cone.
+        apex: DVec3,
+        /// Origin point of the cone axis.
+        axis_origin: DVec3,
+        /// Direction of the cone axis.
+        axis_direction: DVec3,
+        /// The semi-angle of the cone in radians.
+        semi_angle: f64,
+        /// Reference radius at the origin location.
+        ref_radius: f64,
+    },
+
+    /// A spherical surface defined by a center and radius.
+    Sphere {
+        /// Center point of the sphere.
+        center: DVec3,
+        /// Radius of the sphere.
+        radius: f64,
+    },
+
+    /// A toroidal (donut-shaped) surface defined by axis and radii.
+    Torus {
+        /// Center point of the torus.
+        center: DVec3,
+        /// Direction of the torus axis.
+        axis_direction: DVec3,
+        /// Major radius (distance from center to tube center).
+        major_radius: f64,
+        /// Minor radius (radius of the tube).
+        minor_radius: f64,
+    },
+
+    /// A Bezier surface (polynomial).
+    Bezier,
+
+    /// A B-spline surface (NURBS).
+    BSpline,
+
+    /// A surface of revolution (generated by rotating a curve).
+    Revolution,
+
+    /// A surface of extrusion (generated by extruding a curve).
+    Extrusion,
+
+    /// An offset surface (parallel to another surface).
+    Offset,
+
+    /// Any other surface type not specifically categorized.
+    Other,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -517,5 +690,56 @@ mod tests {
             "Expected surface_area() to be ~35.0, was actually {}",
             face.surface_area()
         );
+    }
+
+    #[test]
+    fn test_surface_type_plane() {
+        // Create a rectangular planar face on the XY plane
+        let face = Workplane::xy().rect(10.0, 5.0).to_face();
+
+        match face.surface_type() {
+            SurfaceType::Plane { origin: _, normal } => {
+                // Normal should be pointing in Z direction (approximately)
+                assert!(
+                    (normal.z.abs() - 1.0).abs() < 0.001,
+                    "Expected normal to be along Z axis, got {:?}",
+                    normal
+                );
+            }
+            other => panic!("Expected Plane surface type, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_surface_type_cylinder() {
+        // Create a cylinder primitive (radius 5, height 10)
+        let cylinder = Shape::cylinder_radius_height(5.0, 10.0);
+
+        // Find a cylindrical face in the resulting shape
+        let mut found_cylinder = false;
+        for face in cylinder.faces() {
+            if let SurfaceType::Cylinder {
+                axis_direction,
+                radius,
+                ..
+            } = face.surface_type()
+            {
+                // Axis should be along Z
+                assert!(
+                    (axis_direction.z.abs() - 1.0).abs() < 0.001,
+                    "Expected cylinder axis along Z, got {:?}",
+                    axis_direction
+                );
+                // Radius should be 5.0
+                assert!(
+                    (radius - 5.0).abs() < 0.001,
+                    "Expected radius 5.0, got {}",
+                    radius
+                );
+                found_cylinder = true;
+                break;
+            }
+        }
+        assert!(found_cylinder, "Expected to find a cylindrical face");
     }
 }
