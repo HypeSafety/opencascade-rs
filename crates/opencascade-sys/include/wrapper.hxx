@@ -330,6 +330,21 @@ inline std::unique_ptr<HandleGeomCurve> BRep_Tool_Curve(const TopoDS_Edge &edge,
   return std::unique_ptr<HandleGeomCurve>(new opencascade::handle<Geom_Curve>(BRep_Tool::Curve(edge, first, last)));
 }
 
+// Get 2D curve of edge on face (parametric curve in surface UV space)
+inline std::unique_ptr<HandleGeom2d_Curve> BRep_Tool_CurveOnSurface(
+    const TopoDS_Edge &edge, const TopoDS_Face &face,
+    Standard_Real &first, Standard_Real &last
+) {
+  return std::unique_ptr<HandleGeom2d_Curve>(
+    new opencascade::handle<Geom2d_Curve>(BRep_Tool::CurveOnSurface(edge, face, first, last))
+  );
+}
+
+// Evaluate 2D curve at parameter u
+inline std::unique_ptr<gp_Pnt2d> HandleGeom2d_Curve_Value(const HandleGeom2d_Curve &curve, double u) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(curve->Value(u)));
+}
+
 inline std::unique_ptr<gp_Pnt> BRep_Tool_Pnt(const TopoDS_Vertex &vertex) {
   return std::unique_ptr<gp_Pnt>(new gp_Pnt(BRep_Tool::Pnt(vertex)));
 }
@@ -576,6 +591,44 @@ inline std::unique_ptr<gp_Cylinder> BRepAdaptor_Surface_Cylinder(const BRepAdapt
 
 inline std::unique_ptr<gp_Cone> BRepAdaptor_Surface_Cone(const BRepAdaptor_Surface &surface) {
   return std::unique_ptr<gp_Cone>(new gp_Cone(surface.Cone()));
+}
+
+// BRepAdaptor_Surface D1 evaluation - returns point and partial derivatives at (u,v)
+// We provide separate functions for each output since cxx doesn't support out parameters
+inline void BRepAdaptor_Surface_D1(
+    const BRepAdaptor_Surface &surface,
+    double u, double v,
+    gp_Pnt &p, gp_Vec &d1u, gp_Vec &d1v
+) {
+  surface.D1(u, v, p, d1u, d1v);
+}
+
+// Convenience wrappers that return each D1 component as a UniquePtr
+inline std::unique_ptr<gp_Pnt> BRepAdaptor_Surface_D1_Point(
+    const BRepAdaptor_Surface &surface, double u, double v
+) {
+  gp_Pnt p;
+  gp_Vec d1u, d1v;
+  surface.D1(u, v, p, d1u, d1v);
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(p));
+}
+
+inline std::unique_ptr<gp_Vec> BRepAdaptor_Surface_D1U(
+    const BRepAdaptor_Surface &surface, double u, double v
+) {
+  gp_Pnt p;
+  gp_Vec d1u, d1v;
+  surface.D1(u, v, p, d1u, d1v);
+  return std::unique_ptr<gp_Vec>(new gp_Vec(d1u));
+}
+
+inline std::unique_ptr<gp_Vec> BRepAdaptor_Surface_D1V(
+    const BRepAdaptor_Surface &surface, double u, double v
+) {
+  gp_Pnt p;
+  gp_Vec d1u, d1v;
+  surface.D1(u, v, p, d1u, d1v);
+  return std::unique_ptr<gp_Vec>(new gp_Vec(d1v));
 }
 
 // gp_Pln

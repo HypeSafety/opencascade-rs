@@ -618,6 +618,23 @@ pub mod ffi {
         pub fn BRepAdaptor_Surface_Cylinder(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Cylinder>;
         pub fn BRepAdaptor_Surface_Cone(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Cone>;
 
+        // Surface D1 evaluation - point and partial derivatives at (u,v)
+        pub fn BRepAdaptor_Surface_D1_Point(
+            surface: &BRepAdaptor_Surface,
+            u: f64,
+            v: f64,
+        ) -> UniquePtr<gp_Pnt>;
+        pub fn BRepAdaptor_Surface_D1U(
+            surface: &BRepAdaptor_Surface,
+            u: f64,
+            v: f64,
+        ) -> UniquePtr<gp_Vec>;
+        pub fn BRepAdaptor_Surface_D1V(
+            surface: &BRepAdaptor_Surface,
+            u: f64,
+            v: f64,
+        ) -> UniquePtr<gp_Vec>;
+
         // gp_Pln - Plane geometry
         type gp_Pln;
 
@@ -1269,6 +1286,16 @@ pub mod ffi {
             first: &mut f64,
             last: &mut f64,
         ) -> UniquePtr<HandleGeomCurve>;
+        pub fn BRep_Tool_CurveOnSurface(
+            edge: &TopoDS_Edge,
+            face: &TopoDS_Face,
+            first: &mut f64,
+            last: &mut f64,
+        ) -> UniquePtr<HandleGeom2d_Curve>;
+        pub fn HandleGeom2d_Curve_Value(
+            curve: &HandleGeom2d_Curve,
+            u: f64,
+        ) -> UniquePtr<gp_Pnt2d>;
         pub fn BRep_Tool_Pnt(vertex: &TopoDS_Vertex) -> UniquePtr<gp_Pnt>;
         pub fn BRep_Tool_Triangulation(
             face: &TopoDS_Face,
