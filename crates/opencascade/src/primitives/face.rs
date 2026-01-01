@@ -28,6 +28,11 @@ impl Face {
         Self { inner }
     }
 
+    /// Get a reference to the underlying OpenCascade face.
+    pub fn inner(&self) -> &ffi::TopoDS_Face {
+        &self.inner
+    }
+
     fn from_make_face(make_face: UniquePtr<ffi::BRepBuilderAPI_MakeFace>) -> Self {
         Self::from_face(make_face.Face())
     }

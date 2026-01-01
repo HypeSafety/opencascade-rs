@@ -52,6 +52,11 @@ impl Edge {
         Self { inner }
     }
 
+    /// Get a reference to the underlying OpenCascade edge.
+    pub fn inner(&self) -> &ffi::TopoDS_Edge {
+        &self.inner
+    }
+
     fn from_make_edge(mut make_edge: UniquePtr<ffi::BRepBuilderAPI_MakeEdge>) -> Self {
         Self::from_edge(make_edge.pin_mut().Edge())
     }
