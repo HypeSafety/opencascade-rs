@@ -460,8 +460,13 @@ impl Face {
     /// - V is the axial parameter (along the cylinder axis)
     ///
     /// The angular extent of a cylindrical face is `u_max - u_min`.
+    ///
+    /// Note: This uses the trimmed bounds (not natural domain), so for a
+    /// cylindrical face trimmed to a 90-degree arc, u_max - u_min = PI/2.
     pub fn parametric_bounds(&self) -> (f64, f64, f64, f64) {
-        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, true);
+        // Use false for restriction to get the actual trimmed bounds,
+        // not the natural domain (which for a cylinder is 0 to 2*PI)
+        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, false);
         (
             surface.FirstUParameter(),
             surface.LastUParameter(),
