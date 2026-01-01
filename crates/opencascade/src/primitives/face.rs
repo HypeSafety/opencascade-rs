@@ -3,7 +3,8 @@ use crate::{
     law_function::law_function_from_graph,
     make_pipe_shell::make_pipe_shell_with_law_function,
     primitives::{
-        make_axis_1, make_point, make_vec, EdgeIterator, JoinType, Shape, Solid, Surface, Wire,
+        make_axis_1, make_point, make_vec, Edge, EdgeIterator, JoinType, Shape, Solid, Surface,
+        Wire,
     },
     workplane::Workplane,
 };
@@ -478,6 +479,56 @@ impl Face {
             surface.FirstVParameter(),
             surface.LastVParameter(),
         )
+    }
+
+    /// Evaluate surface point and derivatives at (u, v).
+    ///
+    /// Returns (point, dS/dU, dS/dV) - the point and partial derivatives.
+    /// These are needed for computing Border Trihedrons.
+    pub fn surface_d1(&self, u: f64, v: f64) -> (DVec3, DVec3, DVec3) {
+        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, false);
+
+        let point = ffi::BRepAdaptor_Surface_D1_Point(&surface, u, v);
+        let du = ffi::BRepAdaptor_Surface_D1U(&surface, u, v);
+        let dv = ffi::BRepAdaptor_Surface_D1V(&surface, u, v);
+
+        (
+            DVec3::new(point.X(), point.Y(), point.Z()),
+            DVec3::new(du.X(), du.Y(), du.Z()),
+            DVec3::new(dv.X(), dv.Y(), dv.Z()),
+        )
+    }
+
+    /// Get the 2D parametric curve (PCurve) of an edge on this face.
+    ///
+    /// Returns the curve and its parameter range (first, last).
+    /// Used for cylinder unrolling - maps edge geometry to UV space.
+    pub fn curve_on_surface(&self, edge: &Edge) -> Option<(Geom2dCurve, f64, f64)> {
+        let mut first = 0.0;
+        let mut last = 0.0;
+
+        let curve =
+            ffi::BRep_Tool_CurveOnSurface(edge.inner(), &self.inner, &mut first, &mut last);
+
+        if curve.is_null() {
+            return None;
+        }
+
+        Some((Geom2dCurve { inner: curve }, first, last))
+    }
+}
+
+/// A 2D curve in parameter space.
+pub struct Geom2dCurve {
+    inner: UniquePtr<ffi::HandleGeom2d_Curve>,
+}
+
+impl Geom2dCurve {
+    /// Evaluate the curve at parameter t.
+    /// Returns (u, v) coordinates on the surface.
+    pub fn value(&self, t: f64) -> (f64, f64) {
+        let pt = ffi::HandleGeom2d_Curve_Value(&self.inner, t);
+        (pt.X(), pt.Y())
     }
 }
 
