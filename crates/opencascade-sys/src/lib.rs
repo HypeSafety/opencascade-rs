@@ -1544,6 +1544,13 @@ pub mod ffi {
 
         // BRepTools
         pub fn outer_wire(face: &TopoDS_Face) -> UniquePtr<TopoDS_Wire>;
+        pub fn BRepTools_UVBounds(
+            face: &TopoDS_Face,
+            umin: &mut f64,
+            umax: &mut f64,
+            vmin: &mut f64,
+            vmax: &mut f64,
+        );
 
         // Cleaning / Shape Fixing
         type ShapeFix_Shape;

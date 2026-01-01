@@ -481,6 +481,20 @@ impl Face {
         )
     }
 
+    /// Get the actual trimmed UV bounds of this face.
+    ///
+    /// Unlike `parametric_bounds()`, this computes bounds from the actual
+    /// face wires/edges rather than the underlying surface domain.
+    /// For a cylindrical face trimmed to a 90° arc, returns that arc extent.
+    pub fn uv_bounds(&self) -> (f64, f64, f64, f64) {
+        let mut umin = 0.0;
+        let mut umax = 0.0;
+        let mut vmin = 0.0;
+        let mut vmax = 0.0;
+        ffi::BRepTools_UVBounds(&self.inner, &mut umin, &mut umax, &mut vmin, &mut vmax);
+        (umin, umax, vmin, vmax)
+    }
+
     /// Evaluate surface point and derivatives at (u, v).
     ///
     /// Returns (point, dS/dU, dS/dV) - the point and partial derivatives.

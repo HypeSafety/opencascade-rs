@@ -501,6 +501,10 @@ inline std::unique_ptr<TopoDS_Wire> outer_wire(const TopoDS_Face &face) {
   return std::unique_ptr<TopoDS_Wire>(new TopoDS_Wire(BRepTools::OuterWire(face)));
 }
 
+inline void BRepTools_UVBounds(const TopoDS_Face &face, double &umin, double &umax, double &vmin, double &vmax) {
+  BRepTools::UVBounds(face, umin, umax, vmin, vmax);
+}
+
 // Collections
 inline void map_shapes(const TopoDS_Shape &S, const TopAbs_ShapeEnum T, TopTools_IndexedMapOfShape &M) {
   TopExp::MapShapes(S, T, M);
