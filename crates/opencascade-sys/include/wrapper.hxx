@@ -1,6 +1,8 @@
 #include "rust/cxx.h"
 #include <BOPAlgo_GlueEnum.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Curve2d.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
@@ -11,6 +13,7 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeShapeOnMesh.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -23,6 +26,7 @@
 #include <BRepGProp_Face.hxx>
 #include <BRepIntCurveSurface_Inter.hxx>
 #include <BRepLib.hxx>
+#include <BRepLProp_SLProps.hxx>
 #include <BRepLib_ToolTriangulatedShape.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
@@ -39,6 +43,7 @@
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <BRepTools.hxx>
 #include <GCE2d_MakeSegment.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GC_MakeSegment.hxx>
@@ -49,6 +54,7 @@
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <GeomAbs_CurveType.hxx>
 #include <GeomAbs_JoinType.hxx>
+#include <GeomAbs_SurfaceType.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <Geom_BezierSurface.hxx>
 #include <Geom_CylindricalSurface.hxx>
@@ -65,6 +71,7 @@
 #include <STEPControl_Reader.hxx>
 #include <STEPControl_Writer.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
+#include <ShapeFix_Shape.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
 #include <Standard_Type.hxx>
 #include <StlAPI_Writer.hxx>
@@ -81,7 +88,10 @@
 #include <gp_Ax2.hxx>
 #include <gp_Ax3.hxx>
 #include <gp_Circ.hxx>
+#include <gp_Cone.hxx>
+#include <gp_Cylinder.hxx>
 #include <gp_Lin.hxx>
+#include <gp_Pln.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -539,4 +549,171 @@ inline std::unique_ptr<gp_Pnt> Bnd_Box_CornerMax(const Bnd_Box &box) {
 // BRepBndLib
 inline void BRepBndLib_Add(const TopoDS_Shape &shape, Bnd_Box &box, const Standard_Boolean useTriangulation) {
   BRepBndLib::Add(shape, box, useTriangulation);
+}
+
+// BRepAdaptor_Surface
+inline std::unique_ptr<BRepAdaptor_Surface> BRepAdaptor_Surface_ctor(const TopoDS_Face &face, bool restriction) {
+  return std::unique_ptr<BRepAdaptor_Surface>(new BRepAdaptor_Surface(face, restriction));
+}
+
+inline std::unique_ptr<gp_Pln> BRepAdaptor_Surface_Plane(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Pln>(new gp_Pln(surface.Plane()));
+}
+
+inline std::unique_ptr<gp_Cylinder> BRepAdaptor_Surface_Cylinder(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Cylinder>(new gp_Cylinder(surface.Cylinder()));
+}
+
+inline std::unique_ptr<gp_Cone> BRepAdaptor_Surface_Cone(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Cone>(new gp_Cone(surface.Cone()));
+}
+
+// gp_Pln
+inline std::unique_ptr<gp_Pln> gp_Pln_ctor(const gp_Pnt &origin, const gp_Dir &normal) {
+  return std::unique_ptr<gp_Pln>(new gp_Pln(origin, normal));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Pln_Location(const gp_Pln &plane) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(plane.Location()));
+}
+
+inline std::unique_ptr<gp_Ax1> gp_Pln_Axis(const gp_Pln &plane) {
+  return std::unique_ptr<gp_Ax1>(new gp_Ax1(plane.Axis()));
+}
+
+inline std::unique_ptr<gp_Ax3> gp_Pln_Position(const gp_Pln &plane) {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(plane.Position()));
+}
+
+// gp_Cylinder
+inline std::unique_ptr<gp_Ax1> gp_Cylinder_Axis(const gp_Cylinder &cylinder) {
+  return std::unique_ptr<gp_Ax1>(new gp_Ax1(cylinder.Axis()));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Cylinder_Location(const gp_Cylinder &cylinder) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(cylinder.Location()));
+}
+
+inline std::unique_ptr<gp_Ax3> gp_Cylinder_Position(const gp_Cylinder &cylinder) {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(cylinder.Position()));
+}
+
+// gp_Cone
+inline std::unique_ptr<gp_Pnt> gp_Cone_Apex(const gp_Cone &cone) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(cone.Apex()));
+}
+
+inline std::unique_ptr<gp_Ax1> gp_Cone_Axis(const gp_Cone &cone) {
+  return std::unique_ptr<gp_Ax1>(new gp_Ax1(cone.Axis()));
+}
+
+inline std::unique_ptr<gp_Pnt> gp_Cone_Location(const gp_Cone &cone) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(cone.Location()));
+}
+
+inline std::unique_ptr<gp_Ax3> gp_Cone_Position(const gp_Cone &cone) {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(cone.Position()));
+}
+
+// gp_Ax3 methods
+inline std::unique_ptr<gp_Pnt> gp_Ax3_Location(const gp_Ax3 &axis) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(axis.Location()));
+}
+
+inline std::unique_ptr<gp_Dir> gp_Ax3_Direction(const gp_Ax3 &axis) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(axis.Direction()));
+}
+
+inline std::unique_ptr<gp_Dir> gp_Ax3_XDirection(const gp_Ax3 &axis) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(axis.XDirection()));
+}
+
+inline std::unique_ptr<gp_Dir> gp_Ax3_YDirection(const gp_Ax3 &axis) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(axis.YDirection()));
+}
+
+inline std::unique_ptr<gp_Ax1> gp_Ax3_Axis(const gp_Ax3 &axis) {
+  return std::unique_ptr<gp_Ax1>(new gp_Ax1(axis.Axis()));
+}
+
+// BRepLProp_SLProps - Surface local properties
+inline std::unique_ptr<BRepLProp_SLProps> BRepLProp_SLProps_ctor(
+    const BRepAdaptor_Surface &surface, double u, double v, int n, double resolution
+) {
+  return std::unique_ptr<BRepLProp_SLProps>(new BRepLProp_SLProps(surface, u, v, n, resolution));
+}
+
+inline bool BRepLProp_SLProps_IsNormalDefined(BRepLProp_SLProps &props) {
+  return props.IsNormalDefined();
+}
+
+inline std::unique_ptr<gp_Dir> BRepLProp_SLProps_Normal(BRepLProp_SLProps &props) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(props.Normal()));
+}
+
+inline std::unique_ptr<gp_Pnt> BRepLProp_SLProps_Value(BRepLProp_SLProps &props) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(props.Value()));
+}
+
+inline std::unique_ptr<gp_Vec> BRepLProp_SLProps_D1U(BRepLProp_SLProps &props) {
+  return std::unique_ptr<gp_Vec>(new gp_Vec(props.D1U()));
+}
+
+inline std::unique_ptr<gp_Vec> BRepLProp_SLProps_D1V(BRepLProp_SLProps &props) {
+  return std::unique_ptr<gp_Vec>(new gp_Vec(props.D1V()));
+}
+
+// BRepAdaptor_Curve2d - 2D curve on a face surface
+inline std::unique_ptr<BRepAdaptor_Curve2d> BRepAdaptor_Curve2d_ctor(
+    const TopoDS_Edge &edge, const TopoDS_Face &face
+) {
+  return std::unique_ptr<BRepAdaptor_Curve2d>(new BRepAdaptor_Curve2d(edge, face));
+}
+
+inline std::unique_ptr<gp_Pnt2d> BRepAdaptor_Curve2d_Value(const BRepAdaptor_Curve2d &curve, double u) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(curve.Value(u)));
+}
+
+// gp_Lin additional methods
+inline std::unique_ptr<gp_Pnt> gp_Lin_Location(const gp_Lin &line) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(line.Location()));
+}
+
+inline std::unique_ptr<gp_Dir> gp_Lin_Direction(const gp_Lin &line) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(line.Direction()));
+}
+
+// BRepBuilderAPI_Sewing - Sew faces into shells
+inline std::unique_ptr<BRepBuilderAPI_Sewing> BRepBuilderAPI_Sewing_ctor(double tolerance) {
+  return std::unique_ptr<BRepBuilderAPI_Sewing>(new BRepBuilderAPI_Sewing(tolerance));
+}
+
+inline std::unique_ptr<TopoDS_Shape> BRepBuilderAPI_Sewing_SewedShape(const BRepBuilderAPI_Sewing &sewing) {
+  return std::unique_ptr<TopoDS_Shape>(new TopoDS_Shape(sewing.SewedShape()));
+}
+
+// ShapeFix_Shape - Repair invalid geometry
+inline std::unique_ptr<ShapeFix_Shape> ShapeFix_Shape_ctor(const TopoDS_Shape &shape) {
+  return std::unique_ptr<ShapeFix_Shape>(new ShapeFix_Shape(shape));
+}
+
+inline std::unique_ptr<TopoDS_Shape> ShapeFix_Shape_Shape(const ShapeFix_Shape &fixer) {
+  return std::unique_ptr<TopoDS_Shape>(new TopoDS_Shape(fixer.Shape()));
+}
+
+// GCPnts_AbscissaPoint - Find points at specific arc lengths on curves
+inline std::unique_ptr<GCPnts_AbscissaPoint> GCPnts_AbscissaPoint_ctor(
+    const BRepAdaptor_Curve &curve, double abscissa, double u0
+) {
+  return std::unique_ptr<GCPnts_AbscissaPoint>(new GCPnts_AbscissaPoint(curve, abscissa, u0));
+}
+
+inline double GCPnts_AbscissaPoint_Length(const BRepAdaptor_Curve &curve) {
+  return GCPnts_AbscissaPoint::Length(curve);
+}
+
+inline double GCPnts_AbscissaPoint_Length_bounds(
+    const BRepAdaptor_Curve &curve, double u1, double u2
+) {
+  return GCPnts_AbscissaPoint::Length(curve, u1, u2);
 }

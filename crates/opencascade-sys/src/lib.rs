@@ -62,6 +62,22 @@ pub mod ffi {
         GeomAbs_Intersection,
     }
 
+    #[repr(u32)]
+    #[derive(Debug)]
+    pub enum GeomAbs_SurfaceType {
+        GeomAbs_Plane,
+        GeomAbs_Cylinder,
+        GeomAbs_Cone,
+        GeomAbs_Sphere,
+        GeomAbs_Torus,
+        GeomAbs_BezierSurface,
+        GeomAbs_BSplineSurface,
+        GeomAbs_SurfaceOfRevolution,
+        GeomAbs_SurfaceOfExtrusion,
+        GeomAbs_OffsetSurface,
+        GeomAbs_OtherSurface,
+    }
+
     unsafe extern "C++" {
         // https://github.com/dtolnay/cxx/issues/280
 
@@ -581,6 +597,110 @@ pub mod ffi {
         pub fn LastParameter(self: &BRepAdaptor_Curve) -> f64;
         pub fn BRepAdaptor_Curve_value(curve: &BRepAdaptor_Curve, u: f64) -> UniquePtr<gp_Pnt>;
         pub fn GetType(self: &BRepAdaptor_Curve) -> GeomAbs_CurveType;
+
+        // BRepAdaptor_Surface - Surface analysis
+        type BRepAdaptor_Surface;
+        type GeomAbs_SurfaceType;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepAdaptor_Surface_ctor(
+            face: &TopoDS_Face,
+            restriction: bool,
+        ) -> UniquePtr<BRepAdaptor_Surface>;
+
+        pub fn GetType(self: &BRepAdaptor_Surface) -> GeomAbs_SurfaceType;
+        pub fn FirstUParameter(self: &BRepAdaptor_Surface) -> f64;
+        pub fn LastUParameter(self: &BRepAdaptor_Surface) -> f64;
+        pub fn FirstVParameter(self: &BRepAdaptor_Surface) -> f64;
+        pub fn LastVParameter(self: &BRepAdaptor_Surface) -> f64;
+
+        pub fn BRepAdaptor_Surface_Plane(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Pln>;
+        pub fn BRepAdaptor_Surface_Cylinder(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Cylinder>;
+        pub fn BRepAdaptor_Surface_Cone(surface: &BRepAdaptor_Surface) -> UniquePtr<gp_Cone>;
+
+        // gp_Pln - Plane geometry
+        type gp_Pln;
+
+        #[cxx_name = "construct_unique"]
+        pub fn gp_Pln_ctor(origin: &gp_Pnt, normal: &gp_Dir) -> UniquePtr<gp_Pln>;
+
+        pub fn gp_Pln_Location(plane: &gp_Pln) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Pln_Axis(plane: &gp_Pln) -> UniquePtr<gp_Ax1>;
+        pub fn gp_Pln_Position(plane: &gp_Pln) -> UniquePtr<gp_Ax3>;
+        pub fn Distance(self: &gp_Pln, point: &gp_Pnt) -> f64;
+
+        // gp_Cylinder - Cylindrical surface geometry
+        type gp_Cylinder;
+
+        pub fn Radius(self: &gp_Cylinder) -> f64;
+        pub fn gp_Cylinder_Axis(cylinder: &gp_Cylinder) -> UniquePtr<gp_Ax1>;
+        pub fn gp_Cylinder_Location(cylinder: &gp_Cylinder) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Cylinder_Position(cylinder: &gp_Cylinder) -> UniquePtr<gp_Ax3>;
+
+        // gp_Cone - Conical surface geometry
+        type gp_Cone;
+
+        pub fn gp_Cone_Apex(cone: &gp_Cone) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Cone_Axis(cone: &gp_Cone) -> UniquePtr<gp_Ax1>;
+        pub fn SemiAngle(self: &gp_Cone) -> f64;
+        pub fn RefRadius(self: &gp_Cone) -> f64;
+        pub fn gp_Cone_Location(cone: &gp_Cone) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Cone_Position(cone: &gp_Cone) -> UniquePtr<gp_Ax3>;
+
+        // gp_Ax3 additional methods
+        pub fn gp_Ax3_Location(axis: &gp_Ax3) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Ax3_Direction(axis: &gp_Ax3) -> UniquePtr<gp_Dir>;
+        pub fn gp_Ax3_XDirection(axis: &gp_Ax3) -> UniquePtr<gp_Dir>;
+        pub fn gp_Ax3_YDirection(axis: &gp_Ax3) -> UniquePtr<gp_Dir>;
+        pub fn gp_Ax3_Axis(axis: &gp_Ax3) -> UniquePtr<gp_Ax1>;
+
+        // BRepLProp_SLProps - Surface local properties (normals, tangents at UV points)
+        type BRepLProp_SLProps;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepLProp_SLProps_ctor(
+            surface: &BRepAdaptor_Surface,
+            u: f64,
+            v: f64,
+            n: i32,
+            resolution: f64,
+        ) -> UniquePtr<BRepLProp_SLProps>;
+
+        pub fn BRepLProp_SLProps_IsNormalDefined(props: Pin<&mut BRepLProp_SLProps>) -> bool;
+        pub fn BRepLProp_SLProps_Normal(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Dir>;
+        pub fn BRepLProp_SLProps_Value(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Pnt>;
+        pub fn BRepLProp_SLProps_D1U(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Vec>;
+        pub fn BRepLProp_SLProps_D1V(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Vec>;
+
+        // BRepAdaptor_Curve2d - 2D curve on a face surface
+        type BRepAdaptor_Curve2d;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepAdaptor_Curve2d_ctor(
+            edge: &TopoDS_Edge,
+            face: &TopoDS_Face,
+        ) -> UniquePtr<BRepAdaptor_Curve2d>;
+
+        pub fn FirstParameter(self: &BRepAdaptor_Curve2d) -> f64;
+        pub fn LastParameter(self: &BRepAdaptor_Curve2d) -> f64;
+        pub fn BRepAdaptor_Curve2d_Value(curve: &BRepAdaptor_Curve2d, u: f64) -> UniquePtr<gp_Pnt2d>;
+
+        // gp_Lin additional methods
+        pub fn gp_Lin_Location(line: &gp_Lin) -> UniquePtr<gp_Pnt>;
+        pub fn gp_Lin_Direction(line: &gp_Lin) -> UniquePtr<gp_Dir>;
+        pub fn Distance(self: &gp_Lin, point: &gp_Pnt) -> f64;
+
+        // BRepBuilderAPI_Sewing - Sew faces into shells
+        type BRepBuilderAPI_Sewing;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepBuilderAPI_Sewing_ctor(tolerance: f64) -> UniquePtr<BRepBuilderAPI_Sewing>;
+
+        pub fn Add(self: Pin<&mut BRepBuilderAPI_Sewing>, shape: &TopoDS_Shape);
+        pub fn Perform(self: Pin<&mut BRepBuilderAPI_Sewing>, progress: &Message_ProgressRange);
+        pub fn BRepBuilderAPI_Sewing_SewedShape(
+            sewing: &BRepBuilderAPI_Sewing,
+        ) -> UniquePtr<TopoDS_Shape>;
 
         // Primitives
         type BRepPrimAPI_MakePrism;
@@ -1328,6 +1448,27 @@ pub mod ffi {
             index: i32,
         ) -> UniquePtr<gp_Pnt>;
 
+        // GCPnts_AbscissaPoint - Find points at specific arc lengths on curves
+        type GCPnts_AbscissaPoint;
+
+        #[cxx_name = "construct_unique"]
+        pub fn GCPnts_AbscissaPoint_ctor(
+            curve: &BRepAdaptor_Curve,
+            abscissa: f64,
+            u0: f64,
+        ) -> UniquePtr<GCPnts_AbscissaPoint>;
+
+        pub fn IsDone(self: &GCPnts_AbscissaPoint) -> bool;
+        pub fn Parameter(self: &GCPnts_AbscissaPoint) -> f64;
+
+        // Static methods for arc length computation
+        pub fn GCPnts_AbscissaPoint_Length(curve: &BRepAdaptor_Curve) -> f64;
+        pub fn GCPnts_AbscissaPoint_Length_bounds(
+            curve: &BRepAdaptor_Curve,
+            u1: f64,
+            u2: f64,
+        ) -> f64;
+
         // Shape Properties
         type GProp_GProps;
         #[cxx_name = "construct_unique"]
@@ -1357,7 +1498,15 @@ pub mod ffi {
         // BRepTools
         pub fn outer_wire(face: &TopoDS_Face) -> UniquePtr<TopoDS_Wire>;
 
-        // Cleaning
+        // Cleaning / Shape Fixing
+        type ShapeFix_Shape;
+
+        #[cxx_name = "construct_unique"]
+        pub fn ShapeFix_Shape_ctor(shape: &TopoDS_Shape) -> UniquePtr<ShapeFix_Shape>;
+
+        pub fn Perform(self: Pin<&mut ShapeFix_Shape>, progress: &Message_ProgressRange) -> bool;
+        pub fn ShapeFix_Shape_Shape(fixer: &ShapeFix_Shape) -> UniquePtr<TopoDS_Shape>;
+
         type ShapeUpgrade_UnifySameDomain;
 
         #[cxx_name = "construct_unique"]
