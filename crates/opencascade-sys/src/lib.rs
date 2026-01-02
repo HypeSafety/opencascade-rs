@@ -438,6 +438,10 @@ pub mod ffi {
         pub fn TopoDS_cast_to_solid(shape: &TopoDS_Shape) -> &TopoDS_Solid;
         pub fn TopoDS_cast_to_compound(shape: &TopoDS_Shape) -> &TopoDS_Compound;
 
+        // TopoDS IsSame comparisons
+        pub fn TopoDS_Face_IsSame(f1: &TopoDS_Face, f2: &TopoDS_Face) -> bool;
+        pub fn TopoDS_Edge_IsSame(e1: &TopoDS_Edge, e2: &TopoDS_Edge) -> bool;
+
         #[cxx_name = "Move"]
         pub fn translate(
             self: Pin<&mut TopoDS_Shape>,

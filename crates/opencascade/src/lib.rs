@@ -11,6 +11,9 @@ pub mod workplane;
 mod law_function;
 mod make_pipe_shell;
 
+/// Re-export the FFI module for direct access to OpenCascade bindings.
+pub use opencascade_sys::ffi;
+
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("failed to write STL file")]

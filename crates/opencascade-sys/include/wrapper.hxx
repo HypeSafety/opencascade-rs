@@ -311,6 +311,10 @@ inline const TopoDS_Shape &cast_shell_to_shape(const TopoDS_Shell &shell) { retu
 inline const TopoDS_Shape &cast_solid_to_shape(const TopoDS_Solid &solid) { return solid; }
 inline const TopoDS_Shape &cast_compound_to_shape(const TopoDS_Compound &compound) { return compound; }
 
+// TopoDS IsSame comparisons
+inline bool TopoDS_Face_IsSame(const TopoDS_Face &f1, const TopoDS_Face &f2) { return f1.IsSame(f2); }
+inline bool TopoDS_Edge_IsSame(const TopoDS_Edge &e1, const TopoDS_Edge &e2) { return e1.IsSame(e2); }
+
 // Compound shapes
 inline std::unique_ptr<TopoDS_Shape> TopoDS_Compound_as_shape(std::unique_ptr<TopoDS_Compound> compound) {
   return compound;
