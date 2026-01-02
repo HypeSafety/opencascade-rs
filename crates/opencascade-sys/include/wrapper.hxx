@@ -1093,3 +1093,19 @@ inline std::unique_ptr<HandleGeomCurve> HandleGeomLine_to_HandleGeomCurve(
 inline void BRepBuilderAPI_MakeFace_Add(BRepBuilderAPI_MakeFace &maker, const TopoDS_Wire &wire) {
   maker.Add(wire);
 }
+
+// BRepBuilderAPI_MakeEdge - Create edge from curve with parameter bounds
+inline std::unique_ptr<BRepBuilderAPI_MakeEdge> BRepBuilderAPI_MakeEdge_HandleGeomCurve_with_params(
+    const HandleGeomCurve &curve, Standard_Real p1, Standard_Real p2
+) {
+  return std::unique_ptr<BRepBuilderAPI_MakeEdge>(new BRepBuilderAPI_MakeEdge(curve, p1, p2));
+}
+
+// Geom2d_Line - Direct location and direction accessors
+inline std::unique_ptr<gp_Pnt2d> Geom2d_Line_Location(const HandleGeom2d_Line &line) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(line->Location()));
+}
+
+inline std::unique_ptr<gp_Dir2d> Geom2d_Line_Direction(const HandleGeom2d_Line &line) {
+  return std::unique_ptr<gp_Dir2d>(new gp_Dir2d(line->Direction()));
+}

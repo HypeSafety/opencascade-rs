@@ -562,6 +562,12 @@ pub mod ffi {
             surface_handle: &HandleGeomSurface,
         ) -> UniquePtr<BRepBuilderAPI_MakeEdge>;
 
+        pub fn BRepBuilderAPI_MakeEdge_HandleGeomCurve_with_params(
+            curve: &HandleGeomCurve,
+            p1: f64,
+            p2: f64,
+        ) -> UniquePtr<BRepBuilderAPI_MakeEdge>;
+
         pub fn Vertex1(self: &BRepBuilderAPI_MakeEdge) -> &TopoDS_Vertex;
         pub fn Edge(self: Pin<&mut BRepBuilderAPI_MakeEdge>) -> &TopoDS_Edge;
         pub fn Build(self: Pin<&mut BRepBuilderAPI_MakeEdge>, progress: &Message_ProgressRange);
@@ -1041,6 +1047,8 @@ pub mod ffi {
             curve: &HandleGeom2d_Curve,
         ) -> UniquePtr<HandleGeom2d_Line>;
         pub fn Geom2d_Line_Lin2d(line: &HandleGeom2d_Line) -> UniquePtr<gp_Lin2d>;
+        pub fn Geom2d_Line_Location(line: &HandleGeom2d_Line) -> UniquePtr<gp_Pnt2d>;
+        pub fn Geom2d_Line_Direction(line: &HandleGeom2d_Line) -> UniquePtr<gp_Dir2d>;
 
         // Geom2d_Circle - downcast and accessors
         pub fn HandleGeom2d_Curve_to_Circle(
