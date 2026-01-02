@@ -104,6 +104,7 @@ pub mod ffi {
         type HandleGeomBSplineCurve;
         type HandleGeomBezierCurve;
         type HandleGeomTrimmedCurve;
+        type HandleGeomLine;
         type HandleGeomSurface;
         type HandleGeomBezierSurface;
         type HandleGeomPlane;
@@ -147,6 +148,7 @@ pub mod ffi {
         pub fn IsNull(self: &HandleStandardType) -> bool;
         pub fn IsNull(self: &HandleGeomCurve) -> bool;
         pub fn IsNull(self: &HandleGeomTrimmedCurve) -> bool;
+        pub fn IsNull(self: &HandleGeomLine) -> bool;
         pub fn IsNull(self: &HandleGeomSurface) -> bool;
         pub fn IsNull(self: &HandleGeomBezierSurface) -> bool;
         pub fn IsNull(self: &HandleGeomPlane) -> bool;
@@ -605,6 +607,10 @@ pub mod ffi {
         pub fn Shape(self: Pin<&mut BRepBuilderAPI_MakeFace>) -> &TopoDS_Shape;
         pub fn Build(self: Pin<&mut BRepBuilderAPI_MakeFace>, progress: &Message_ProgressRange);
         pub fn IsDone(self: &BRepBuilderAPI_MakeFace) -> bool;
+        pub fn BRepBuilderAPI_MakeFace_Add(
+            maker: Pin<&mut BRepBuilderAPI_MakeFace>,
+            wire: &TopoDS_Wire,
+        );
 
         // BRepAdaptor
         type BRepAdaptor_Curve;
@@ -1290,6 +1296,15 @@ pub mod ffi {
         pub fn Geom_BezierCurve_to_handle(
             law: UniquePtr<Geom_BezierCurve>,
         ) -> UniquePtr<HandleGeomBezierCurve>;
+
+        // Geom_Line - Infinite line from point and direction
+        type Geom_Line;
+
+        pub fn Geom_Line_ctor(point: &gp_Pnt, dir: &gp_Dir) -> UniquePtr<Geom_Line>;
+        pub fn Geom_Line_to_handle(line: UniquePtr<Geom_Line>) -> UniquePtr<HandleGeomLine>;
+        pub fn HandleGeomLine_to_HandleGeomCurve(
+            line: &HandleGeomLine,
+        ) -> UniquePtr<HandleGeomCurve>;
 
         // TColStd_Array1OfReal - Array of real numbers (for B-spline knots, weights)
         type TColStd_Array1OfReal;

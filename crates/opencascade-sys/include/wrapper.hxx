@@ -65,6 +65,7 @@
 #include <Geom_BezierCurve.hxx>
 #include <Geom_BezierSurface.hxx>
 #include <Geom_BSplineCurve.hxx>
+#include <Geom_Line.hxx>
 #include <TColStd_Array1OfReal.hxx>
 #include <TColStd_Array1OfInteger.hxx>
 #include <Geom_CylindricalSurface.hxx>
@@ -124,6 +125,7 @@ typedef opencascade::handle<Geom_Curve> HandleGeomCurve;
 typedef opencascade::handle<Geom_BSplineCurve> HandleGeomBSplineCurve;
 typedef opencascade::handle<Geom_BezierCurve> HandleGeomBezierCurve;
 typedef opencascade::handle<Geom_TrimmedCurve> HandleGeomTrimmedCurve;
+typedef opencascade::handle<Geom_Line> HandleGeomLine;
 typedef opencascade::handle<Geom_Surface> HandleGeomSurface;
 typedef opencascade::handle<Geom_BezierSurface> HandleGeomBezierSurface;
 typedef opencascade::handle<Geom_Plane> HandleGeomPlane;
@@ -1070,4 +1072,24 @@ inline void Geom2d_BSplineCurve_SetPole(
     const HandleGeom2d_BSplineCurve &curve, Standard_Integer index, const gp_Pnt2d &pole
 ) {
   curve->SetPole(index, pole);
+}
+
+// Geom_Line - Create a line from point and direction
+inline std::unique_ptr<Geom_Line> Geom_Line_ctor(const gp_Pnt &point, const gp_Dir &dir) {
+  return std::unique_ptr<Geom_Line>(new Geom_Line(point, dir));
+}
+
+inline std::unique_ptr<HandleGeomLine> Geom_Line_to_handle(std::unique_ptr<Geom_Line> line) {
+  return std::unique_ptr<HandleGeomLine>(new opencascade::handle<Geom_Line>(line.release()));
+}
+
+inline std::unique_ptr<HandleGeomCurve> HandleGeomLine_to_HandleGeomCurve(
+    const HandleGeomLine &line
+) {
+  return std::unique_ptr<HandleGeomCurve>(new opencascade::handle<Geom_Curve>(line));
+}
+
+// BRepBuilderAPI_MakeFace - Add an inner wire (hole)
+inline void BRepBuilderAPI_MakeFace_Add(BRepBuilderAPI_MakeFace &maker, const TopoDS_Wire &wire) {
+  maker.Add(wire);
 }
