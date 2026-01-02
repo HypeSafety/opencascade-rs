@@ -30,6 +30,8 @@
 #include <BRepLib_ToolTriangulatedShape.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
+#include <BRepOffsetAPI_MakeOffsetShape.hxx>
+#include <BRepOffset_Mode.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepOffsetAPI_MakePipeShell.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
@@ -913,4 +915,23 @@ inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_to_handle(
   return std::unique_ptr<HandleGeomBSplineCurve>(
     new opencascade::handle<Geom_BSplineCurve>(curve.release())
   );
+}
+
+// BRepOffsetAPI_MakeOffsetShape - Offset a shape in 3D
+inline std::unique_ptr<BRepOffsetAPI_MakeOffsetShape> BRepOffsetAPI_MakeOffsetShape_ctor() {
+  return std::unique_ptr<BRepOffsetAPI_MakeOffsetShape>(new BRepOffsetAPI_MakeOffsetShape());
+}
+
+inline void BRepOffsetAPI_MakeOffsetShape_PerformByJoin(
+    BRepOffsetAPI_MakeOffsetShape &maker,
+    const TopoDS_Shape &shape,
+    Standard_Real offset,
+    Standard_Real tolerance,
+    BRepOffset_Mode mode,
+    Standard_Boolean intersection,
+    Standard_Boolean selfInter,
+    GeomAbs_JoinType join,
+    Standard_Boolean removeIntEdges
+) {
+  maker.PerformByJoin(shape, offset, tolerance, mode, intersection, selfInter, join, removeIntEdges);
 }

@@ -78,6 +78,14 @@ pub mod ffi {
         GeomAbs_OtherSurface,
     }
 
+    #[repr(u32)]
+    #[derive(Debug)]
+    pub enum BRepOffset_Mode {
+        BRepOffset_Skin,
+        BRepOffset_Pipe,
+        BRepOffset_RectoVerso,
+    }
+
     unsafe extern "C++" {
         // https://github.com/dtolnay/cxx/issues/280
 
@@ -955,6 +963,39 @@ pub mod ffi {
         pub fn Shape(self: Pin<&mut BRepOffsetAPI_MakeOffset>) -> &TopoDS_Shape;
         pub fn Build(self: Pin<&mut BRepOffsetAPI_MakeOffset>, progress: &Message_ProgressRange);
         pub fn IsDone(self: &BRepOffsetAPI_MakeOffset) -> bool;
+
+        // BRepOffsetAPI_MakeOffsetShape - Offset a shape in 3D (for thickening shells)
+        type BRepOffsetAPI_MakeOffsetShape;
+        type BRepOffset_Mode;
+
+        pub fn BRepOffsetAPI_MakeOffsetShape_ctor() -> UniquePtr<BRepOffsetAPI_MakeOffsetShape>;
+
+        /// Perform offset by joining faces.
+        /// - offset: offset distance (negative = thicken inward)
+        /// - tolerance: approximation tolerance
+        /// - mode: BRepOffset_Skin for shell offset
+        /// - intersection: compute self-intersections
+        /// - selfInter: detect self-intersections
+        /// - join: GeomAbs_Arc for filleted corners
+        /// - removeIntEdges: remove internal edges
+        pub fn BRepOffsetAPI_MakeOffsetShape_PerformByJoin(
+            maker: Pin<&mut BRepOffsetAPI_MakeOffsetShape>,
+            shape: &TopoDS_Shape,
+            offset: f64,
+            tolerance: f64,
+            mode: BRepOffset_Mode,
+            intersection: bool,
+            self_inter: bool,
+            join: GeomAbs_JoinType,
+            remove_int_edges: bool,
+        );
+
+        pub fn Shape(self: Pin<&mut BRepOffsetAPI_MakeOffsetShape>) -> &TopoDS_Shape;
+        pub fn Build(
+            self: Pin<&mut BRepOffsetAPI_MakeOffsetShape>,
+            progress: &Message_ProgressRange,
+        );
+        pub fn IsDone(self: &BRepOffsetAPI_MakeOffsetShape) -> bool;
 
         type GeomAbs_JoinType;
 
