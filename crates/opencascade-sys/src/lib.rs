@@ -1081,6 +1081,21 @@ pub mod ffi {
             pole: &gp_Pnt2d,
         );
 
+        // Geom2dConvert - Convert any 2D curve to B-spline
+        pub fn Geom2dConvert_CurveToBSplineCurve(
+            curve: &HandleGeom2d_Curve,
+        ) -> UniquePtr<HandleGeom2d_BSplineCurve>;
+
+        // Geom_BSplineCurve - Create from rust slices (convenience constructor)
+        pub fn Geom_BSplineCurve_from_vectors(
+            pole_coords: &[f64],       // flattened [x1,y1,z1, x2,y2,z2, ...]
+            weights: &[f64],           // empty slice for non-rational
+            knots: &[f64],
+            multiplicities: &[i32],
+            degree: i32,
+            periodic: bool,
+        ) -> UniquePtr<HandleGeomBSplineCurve>;
+
         type GeomAbs_JoinType;
 
         // Solids
