@@ -122,6 +122,128 @@ impl Edge {
         Self::from_edge(edge)
     }
 
+    /// Create a B-spline edge from control points (poles), knots, multiplicities, and degree.
+    ///
+    /// This is useful for importing B-splines from formats like DXF that provide these parameters
+    /// directly rather than points to interpolate.
+    ///
+    /// # Arguments
+    /// * `poles` - Control points of the B-spline
+    /// * `knots` - Unique knot values (strictly increasing)
+    /// * `multiplicities` - Multiplicity of each knot (how many times it repeats)
+    /// * `degree` - Polynomial degree of the B-spline
+    /// * `periodic` - Whether the curve is periodic (closed)
+    pub fn bspline(
+        poles: impl IntoIterator<Item = DVec3>,
+        knots: impl IntoIterator<Item = f64>,
+        multiplicities: impl IntoIterator<Item = i32>,
+        degree: i32,
+        periodic: bool,
+    ) -> Self {
+        let poles: Vec<_> = poles.into_iter().collect();
+        let knots: Vec<_> = knots.into_iter().collect();
+        let multiplicities: Vec<_> = multiplicities.into_iter().collect();
+
+        // Create poles array
+        let mut poles_array = ffi::TColgp_Array1OfPnt_ctor(1, poles.len() as i32);
+        for (i, point) in poles.into_iter().enumerate() {
+            ffi::TColgp_Array1OfPnt_SetValue(poles_array.pin_mut(), i as i32 + 1, &make_point(point));
+        }
+
+        // Create knots array
+        let mut knots_array = ffi::TColStd_Array1OfReal_ctor(1, knots.len() as i32);
+        for (i, knot) in knots.into_iter().enumerate() {
+            ffi::TColStd_Array1OfReal_SetValue(knots_array.pin_mut(), i as i32 + 1, knot);
+        }
+
+        // Create multiplicities array
+        let mut mults_array = ffi::TColStd_Array1OfInteger_ctor(1, multiplicities.len() as i32);
+        for (i, mult) in multiplicities.into_iter().enumerate() {
+            ffi::TColStd_Array1OfInteger_SetValue(mults_array.pin_mut(), i as i32 + 1, mult);
+        }
+
+        // Create the B-spline curve
+        let bspline = ffi::Geom_BSplineCurve_ctor(
+            &poles_array,
+            &knots_array,
+            &mults_array,
+            degree,
+            periodic,
+        );
+        let bspline_handle = ffi::Geom_BSplineCurve_to_handle(bspline);
+        let curve_handle = ffi::new_HandleGeomCurve_from_HandleGeom_BSplineCurve(&bspline_handle);
+
+        let mut make_edge = ffi::BRepBuilderAPI_MakeEdge_HandleGeomCurve(&curve_handle);
+        let edge = make_edge.pin_mut().Edge();
+        Self::from_edge(edge)
+    }
+
+    /// Create a rational B-spline (NURBS) edge with weights.
+    ///
+    /// This is useful for exact representations of conic sections (circles, ellipses, etc.)
+    /// and for importing NURBS curves from CAD formats.
+    ///
+    /// # Arguments
+    /// * `poles` - Control points of the B-spline
+    /// * `weights` - Weight for each control point (all equal = non-rational B-spline)
+    /// * `knots` - Unique knot values (strictly increasing)
+    /// * `multiplicities` - Multiplicity of each knot
+    /// * `degree` - Polynomial degree of the B-spline
+    /// * `periodic` - Whether the curve is periodic (closed)
+    pub fn nurbs(
+        poles: impl IntoIterator<Item = DVec3>,
+        weights: impl IntoIterator<Item = f64>,
+        knots: impl IntoIterator<Item = f64>,
+        multiplicities: impl IntoIterator<Item = i32>,
+        degree: i32,
+        periodic: bool,
+    ) -> Self {
+        let poles: Vec<_> = poles.into_iter().collect();
+        let weights: Vec<_> = weights.into_iter().collect();
+        let knots: Vec<_> = knots.into_iter().collect();
+        let multiplicities: Vec<_> = multiplicities.into_iter().collect();
+
+        // Create poles array
+        let mut poles_array = ffi::TColgp_Array1OfPnt_ctor(1, poles.len() as i32);
+        for (i, point) in poles.into_iter().enumerate() {
+            ffi::TColgp_Array1OfPnt_SetValue(poles_array.pin_mut(), i as i32 + 1, &make_point(point));
+        }
+
+        // Create weights array
+        let mut weights_array = ffi::TColStd_Array1OfReal_ctor(1, weights.len() as i32);
+        for (i, weight) in weights.into_iter().enumerate() {
+            ffi::TColStd_Array1OfReal_SetValue(weights_array.pin_mut(), i as i32 + 1, weight);
+        }
+
+        // Create knots array
+        let mut knots_array = ffi::TColStd_Array1OfReal_ctor(1, knots.len() as i32);
+        for (i, knot) in knots.into_iter().enumerate() {
+            ffi::TColStd_Array1OfReal_SetValue(knots_array.pin_mut(), i as i32 + 1, knot);
+        }
+
+        // Create multiplicities array
+        let mut mults_array = ffi::TColStd_Array1OfInteger_ctor(1, multiplicities.len() as i32);
+        for (i, mult) in multiplicities.into_iter().enumerate() {
+            ffi::TColStd_Array1OfInteger_SetValue(mults_array.pin_mut(), i as i32 + 1, mult);
+        }
+
+        // Create the NURBS curve
+        let bspline = ffi::Geom_BSplineCurve_ctor_weighted(
+            &poles_array,
+            &weights_array,
+            &knots_array,
+            &mults_array,
+            degree,
+            periodic,
+        );
+        let bspline_handle = ffi::Geom_BSplineCurve_to_handle(bspline);
+        let curve_handle = ffi::new_HandleGeomCurve_from_HandleGeom_BSplineCurve(&bspline_handle);
+
+        let mut make_edge = ffi::BRepBuilderAPI_MakeEdge_HandleGeomCurve(&curve_handle);
+        let edge = make_edge.pin_mut().Edge();
+        Self::from_edge(edge)
+    }
+
     pub fn arc(p1: DVec3, p2: DVec3, p3: DVec3) -> Self {
         let make_arc = ffi::GC_MakeArcOfCircle_point_point_point(
             &make_point(p1),

@@ -652,6 +652,61 @@ impl Shape {
         self.inner.pin_mut().set_global_translation(&location, false);
     }
 
+    /// Apply a transformation to the shape, returning a new transformed shape.
+    #[must_use]
+    pub fn transform(&self, trsf: &ffi::gp_Trsf) -> Self {
+        let mut builder =
+            ffi::BRepBuilderAPI_Transform_ctor(&self.inner, trsf, true /* copy */);
+        builder.pin_mut().Build(&ffi::Message_ProgressRange_ctor());
+        Self::from_shape(builder.pin_mut().Shape())
+    }
+
+    /// Rotate the shape around an axis defined by origin and direction.
+    /// Returns a new rotated shape.
+    #[must_use]
+    pub fn rotate(&self, axis_origin: DVec3, axis_direction: DVec3, angle_radians: f64) -> Self {
+        let axis = make_axis_1(axis_origin, axis_direction);
+        let mut trsf = ffi::new_transform();
+        trsf.pin_mut().SetRotation(&axis, angle_radians);
+        self.transform(&trsf)
+    }
+
+    /// Mirror the shape across an axis defined by origin and direction.
+    /// Returns a new mirrored shape.
+    #[must_use]
+    pub fn mirror(&self, axis_origin: DVec3, axis_direction: DVec3) -> Self {
+        let axis = make_axis_1(axis_origin, axis_direction);
+        let mut trsf = ffi::new_transform();
+        trsf.pin_mut().set_mirror_axis(&axis);
+        self.transform(&trsf)
+    }
+
+    /// Scale the shape uniformly around a point.
+    /// Returns a new scaled shape.
+    #[must_use]
+    pub fn scale(&self, center: DVec3, scale_factor: f64) -> Self {
+        let point = make_point(center);
+        let mut trsf = ffi::new_transform();
+        trsf.pin_mut().SetScale(&point, scale_factor);
+        self.transform(&trsf)
+    }
+
+    /// Translate the shape by a vector, returning a new translated shape.
+    #[must_use]
+    pub fn translate(&self, translation: DVec3) -> Self {
+        let mut trsf = ffi::new_transform();
+        let translation_vec = make_vec(translation);
+        trsf.pin_mut().set_translation_vec(&translation_vec);
+        self.transform(&trsf)
+    }
+
+    /// Flip the shape 180 degrees around the Z axis (for asymmetric tooling).
+    /// This is equivalent to `rotate(DVec3::ZERO, DVec3::Z, std::f64::consts::PI)`.
+    #[must_use]
+    pub fn flipped(&self) -> Self {
+        self.rotate(DVec3::ZERO, DVec3::Z, std::f64::consts::PI)
+    }
+
     pub fn mesh(&self) -> Result<Mesh, Error> {
         self.mesh_with_tolerance(0.01)
     }

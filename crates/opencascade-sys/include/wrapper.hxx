@@ -57,6 +57,9 @@
 #include <GeomAbs_SurfaceType.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <Geom_BezierSurface.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <TColStd_Array1OfReal.hxx>
+#include <TColStd_Array1OfInteger.hxx>
 #include <Geom_CylindricalSurface.hxx>
 #include <Geom_Plane.hxx>
 #include <Geom_Surface.hxx>
@@ -817,4 +820,97 @@ inline double GCPnts_AbscissaPoint_Length_bounds(
     const BRepAdaptor_Curve &curve, double u1, double u2
 ) {
   return GCPnts_AbscissaPoint::Length(curve, u1, u2);
+}
+
+// TColStd_Array1OfReal - Array of real numbers (for knots, weights)
+inline std::unique_ptr<TColStd_Array1OfReal> TColStd_Array1OfReal_ctor(
+    Standard_Integer lower, Standard_Integer upper
+) {
+  return std::unique_ptr<TColStd_Array1OfReal>(new TColStd_Array1OfReal(lower, upper));
+}
+
+inline Standard_Real TColStd_Array1OfReal_Value(
+    const TColStd_Array1OfReal &array, Standard_Integer index
+) {
+  return array.Value(index);
+}
+
+inline void TColStd_Array1OfReal_SetValue(
+    TColStd_Array1OfReal &array, Standard_Integer index, Standard_Real value
+) {
+  array.SetValue(index, value);
+}
+
+// TColStd_Array1OfInteger - Array of integers (for multiplicities)
+inline std::unique_ptr<TColStd_Array1OfInteger> TColStd_Array1OfInteger_ctor(
+    Standard_Integer lower, Standard_Integer upper
+) {
+  return std::unique_ptr<TColStd_Array1OfInteger>(new TColStd_Array1OfInteger(lower, upper));
+}
+
+inline Standard_Integer TColStd_Array1OfInteger_Value(
+    const TColStd_Array1OfInteger &array, Standard_Integer index
+) {
+  return array.Value(index);
+}
+
+inline void TColStd_Array1OfInteger_SetValue(
+    TColStd_Array1OfInteger &array, Standard_Integer index, Standard_Integer value
+) {
+  array.SetValue(index, value);
+}
+
+// TColgp_Array1OfPnt - Array of points (for B-spline poles)
+inline std::unique_ptr<TColgp_Array1OfPnt> TColgp_Array1OfPnt_ctor(
+    Standard_Integer lower, Standard_Integer upper
+) {
+  return std::unique_ptr<TColgp_Array1OfPnt>(new TColgp_Array1OfPnt(lower, upper));
+}
+
+inline std::unique_ptr<gp_Pnt> TColgp_Array1OfPnt_Value(
+    const TColgp_Array1OfPnt &array, Standard_Integer index
+) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(array.Value(index)));
+}
+
+inline void TColgp_Array1OfPnt_SetValue(
+    TColgp_Array1OfPnt &array, Standard_Integer index, const gp_Pnt &value
+) {
+  array.SetValue(index, value);
+}
+
+// Geom_BSplineCurve - Non-rational B-spline curve constructor
+inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor(
+    const TColgp_Array1OfPnt &poles,
+    const TColStd_Array1OfReal &knots,
+    const TColStd_Array1OfInteger &multiplicities,
+    Standard_Integer degree,
+    Standard_Boolean periodic
+) {
+  return std::unique_ptr<Geom_BSplineCurve>(
+    new Geom_BSplineCurve(poles, knots, multiplicities, degree, periodic)
+  );
+}
+
+// Geom_BSplineCurve - Rational B-spline (NURBS) curve constructor
+inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor_weighted(
+    const TColgp_Array1OfPnt &poles,
+    const TColStd_Array1OfReal &weights,
+    const TColStd_Array1OfReal &knots,
+    const TColStd_Array1OfInteger &multiplicities,
+    Standard_Integer degree,
+    Standard_Boolean periodic
+) {
+  return std::unique_ptr<Geom_BSplineCurve>(
+    new Geom_BSplineCurve(poles, weights, knots, multiplicities, degree, periodic, Standard_True)
+  );
+}
+
+// Convert Geom_BSplineCurve to handle
+inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_to_handle(
+    std::unique_ptr<Geom_BSplineCurve> curve
+) {
+  return std::unique_ptr<HandleGeomBSplineCurve>(
+    new opencascade::handle<Geom_BSplineCurve>(curve.release())
+  );
 }

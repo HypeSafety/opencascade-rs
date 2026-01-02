@@ -1178,6 +1178,75 @@ pub mod ffi {
             law: UniquePtr<Geom_BezierCurve>,
         ) -> UniquePtr<HandleGeomBezierCurve>;
 
+        // TColStd_Array1OfReal - Array of real numbers (for B-spline knots, weights)
+        type TColStd_Array1OfReal;
+        pub fn TColStd_Array1OfReal_ctor(
+            lower: i32,
+            upper: i32,
+        ) -> UniquePtr<TColStd_Array1OfReal>;
+        pub fn Length(self: &TColStd_Array1OfReal) -> i32;
+        pub fn TColStd_Array1OfReal_SetValue(
+            array: Pin<&mut TColStd_Array1OfReal>,
+            index: i32,
+            value: f64,
+        );
+        pub fn TColStd_Array1OfReal_Value(array: &TColStd_Array1OfReal, index: i32) -> f64;
+
+        // TColStd_Array1OfInteger - Array of integers (for B-spline multiplicities)
+        type TColStd_Array1OfInteger;
+        pub fn TColStd_Array1OfInteger_ctor(
+            lower: i32,
+            upper: i32,
+        ) -> UniquePtr<TColStd_Array1OfInteger>;
+        pub fn Length(self: &TColStd_Array1OfInteger) -> i32;
+        pub fn TColStd_Array1OfInteger_SetValue(
+            array: Pin<&mut TColStd_Array1OfInteger>,
+            index: i32,
+            value: i32,
+        );
+        pub fn TColStd_Array1OfInteger_Value(array: &TColStd_Array1OfInteger, index: i32) -> i32;
+
+        // TColgp_Array1OfPnt - Array of points (for B-spline poles)
+        type TColgp_Array1OfPnt;
+        pub fn TColgp_Array1OfPnt_ctor(lower: i32, upper: i32) -> UniquePtr<TColgp_Array1OfPnt>;
+        pub fn Length(self: &TColgp_Array1OfPnt) -> i32;
+        pub fn TColgp_Array1OfPnt_SetValue(
+            array: Pin<&mut TColgp_Array1OfPnt>,
+            index: i32,
+            item: &gp_Pnt,
+        );
+        pub fn TColgp_Array1OfPnt_Value(
+            array: &TColgp_Array1OfPnt,
+            index: i32,
+        ) -> UniquePtr<gp_Pnt>;
+
+        // Geom_BSplineCurve - B-spline curve
+        type Geom_BSplineCurve;
+
+        /// Create a non-rational B-spline curve from poles, knots, multiplicities, and degree.
+        pub fn Geom_BSplineCurve_ctor(
+            poles: &TColgp_Array1OfPnt,
+            knots: &TColStd_Array1OfReal,
+            multiplicities: &TColStd_Array1OfInteger,
+            degree: i32,
+            periodic: bool,
+        ) -> UniquePtr<Geom_BSplineCurve>;
+
+        /// Create a rational B-spline (NURBS) curve with weights.
+        pub fn Geom_BSplineCurve_ctor_weighted(
+            poles: &TColgp_Array1OfPnt,
+            weights: &TColStd_Array1OfReal,
+            knots: &TColStd_Array1OfReal,
+            multiplicities: &TColStd_Array1OfInteger,
+            degree: i32,
+            periodic: bool,
+        ) -> UniquePtr<Geom_BSplineCurve>;
+
+        /// Convert a B-spline curve to a handle for use with edge construction.
+        pub fn Geom_BSplineCurve_to_handle(
+            curve: UniquePtr<Geom_BSplineCurve>,
+        ) -> UniquePtr<HandleGeomBSplineCurve>;
+
         // Transforms
         type gp_Trsf;
 
