@@ -126,6 +126,10 @@ pub mod ffi {
         pub fn DynamicType(surface: &HandleGeomSurface) -> &HandleStandardType;
         pub fn type_name(handle: &HandleStandardType) -> String;
 
+        // OCCT exception handling - retrieve error message after a function returns nullptr
+        pub fn get_occt_last_error() -> String;
+        pub fn clear_occt_last_error();
+
         #[cxx_name = "construct_unique"]
         pub fn new_HandleGeomCurve_from_HandleGeom_BSplineCurve(
             bspline_curve_handle: &HandleGeomBSplineCurve,

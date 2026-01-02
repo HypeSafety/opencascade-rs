@@ -85,6 +85,7 @@
 #include <ShapeAnalysis_FreeBounds.hxx>
 #include <ShapeFix_Shape.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <Standard_Failure.hxx>
 #include <Standard_Type.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TColgp_Array1OfDir.hxx>
@@ -154,6 +155,21 @@ template <typename T> const T &handle_try_deref(const opencascade::handle<T> &ha
     throw std::runtime_error("null handle dereference");
   }
   return *handle;
+}
+
+// Thread-local storage for OCCT exception messages
+// This allows Rust to retrieve error details after a function returns nullptr
+inline std::string& get_occt_last_error_ref() {
+  static thread_local std::string occt_last_error;
+  return occt_last_error;
+}
+
+inline rust::String get_occt_last_error() {
+  return rust::String(get_occt_last_error_ref());
+}
+
+inline void clear_occt_last_error() {
+  get_occt_last_error_ref().clear();
 }
 
 inline const HandleStandardType &DynamicType(const HandleGeomSurface &surface) { return surface->DynamicType(); }
@@ -605,16 +621,33 @@ inline std::unique_ptr<BRepAdaptor_Surface> BRepAdaptor_Surface_ctor(const TopoD
   return std::unique_ptr<BRepAdaptor_Surface>(new BRepAdaptor_Surface(face, restriction));
 }
 
+// Surface type extractors - these throw Standard_NoSuchObject if type doesn't match
+// Wrapped with try/catch to prevent exceptions crossing FFI boundary
 inline std::unique_ptr<gp_Pln> BRepAdaptor_Surface_Plane(const BRepAdaptor_Surface &surface) {
-  return std::unique_ptr<gp_Pln>(new gp_Pln(surface.Plane()));
+  try {
+    return std::unique_ptr<gp_Pln>(new gp_Pln(surface.Plane()));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 inline std::unique_ptr<gp_Cylinder> BRepAdaptor_Surface_Cylinder(const BRepAdaptor_Surface &surface) {
-  return std::unique_ptr<gp_Cylinder>(new gp_Cylinder(surface.Cylinder()));
+  try {
+    return std::unique_ptr<gp_Cylinder>(new gp_Cylinder(surface.Cylinder()));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 inline std::unique_ptr<gp_Cone> BRepAdaptor_Surface_Cone(const BRepAdaptor_Surface &surface) {
-  return std::unique_ptr<gp_Cone>(new gp_Cone(surface.Cone()));
+  try {
+    return std::unique_ptr<gp_Cone>(new gp_Cone(surface.Cone()));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 // BRepAdaptor_Surface D1 evaluation - returns point and partial derivatives at (u,v)
@@ -702,9 +735,14 @@ inline std::unique_ptr<gp_Ax3> gp_Cone_Position(const gp_Cone &cone) {
   return std::unique_ptr<gp_Ax3>(new gp_Ax3(cone.Position()));
 }
 
-// gp_Sphere - Spherical surface
+// gp_Sphere - Spherical surface (throws Standard_NoSuchObject if not a sphere)
 inline std::unique_ptr<gp_Sphere> BRepAdaptor_Surface_Sphere(const BRepAdaptor_Surface &surface) {
-  return std::unique_ptr<gp_Sphere>(new gp_Sphere(surface.Sphere()));
+  try {
+    return std::unique_ptr<gp_Sphere>(new gp_Sphere(surface.Sphere()));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 inline std::unique_ptr<gp_Pnt> gp_Sphere_Location(const gp_Sphere &sphere) {
@@ -715,9 +753,14 @@ inline std::unique_ptr<gp_Ax3> gp_Sphere_Position(const gp_Sphere &sphere) {
   return std::unique_ptr<gp_Ax3>(new gp_Ax3(sphere.Position()));
 }
 
-// gp_Torus - Toroidal surface
+// gp_Torus - Toroidal surface (throws Standard_NoSuchObject if not a torus)
 inline std::unique_ptr<gp_Torus> BRepAdaptor_Surface_Torus(const BRepAdaptor_Surface &surface) {
-  return std::unique_ptr<gp_Torus>(new gp_Torus(surface.Torus()));
+  try {
+    return std::unique_ptr<gp_Torus>(new gp_Torus(surface.Torus()));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 inline std::unique_ptr<gp_Pnt> gp_Torus_Location(const gp_Torus &torus) {
@@ -893,6 +936,7 @@ inline void TColgp_Array1OfPnt_SetValue(
 }
 
 // Geom_BSplineCurve - Non-rational B-spline curve constructor
+// Throws Standard_ConstructionError if parameters are invalid
 inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor(
     const TColgp_Array1OfPnt &poles,
     const TColStd_Array1OfReal &knots,
@@ -900,12 +944,18 @@ inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor(
     Standard_Integer degree,
     Standard_Boolean periodic
 ) {
-  return std::unique_ptr<Geom_BSplineCurve>(
-    new Geom_BSplineCurve(poles, knots, multiplicities, degree, periodic)
-  );
+  try {
+    return std::unique_ptr<Geom_BSplineCurve>(
+      new Geom_BSplineCurve(poles, knots, multiplicities, degree, periodic)
+    );
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 // Geom_BSplineCurve - Rational B-spline (NURBS) curve constructor
+// Throws Standard_ConstructionError if parameters are invalid
 inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor_weighted(
     const TColgp_Array1OfPnt &poles,
     const TColStd_Array1OfReal &weights,
@@ -914,9 +964,14 @@ inline std::unique_ptr<Geom_BSplineCurve> Geom_BSplineCurve_ctor_weighted(
     Standard_Integer degree,
     Standard_Boolean periodic
 ) {
-  return std::unique_ptr<Geom_BSplineCurve>(
-    new Geom_BSplineCurve(poles, weights, knots, multiplicities, degree, periodic, Standard_True)
-  );
+  try {
+    return std::unique_ptr<Geom_BSplineCurve>(
+      new Geom_BSplineCurve(poles, weights, knots, multiplicities, degree, periodic, Standard_True)
+    );
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 // Convert Geom_BSplineCurve to handle
@@ -1112,16 +1167,23 @@ inline std::unique_ptr<gp_Dir2d> Geom2d_Line_Direction(const HandleGeom2d_Line &
 }
 
 // Geom2dConvert - Convert any 2D curve to B-spline
+// Throws Standard_DomainError for infinite curves, Standard_ConstructionError for unsupported types
 inline std::unique_ptr<HandleGeom2d_BSplineCurve> Geom2dConvert_CurveToBSplineCurve(
     const HandleGeom2d_Curve &curve
 ) {
-  opencascade::handle<Geom2d_BSplineCurve> bspline = Geom2dConvert::CurveToBSplineCurve(curve);
-  return std::unique_ptr<HandleGeom2d_BSplineCurve>(
-    new opencascade::handle<Geom2d_BSplineCurve>(bspline)
-  );
+  try {
+    opencascade::handle<Geom2d_BSplineCurve> bspline = Geom2dConvert::CurveToBSplineCurve(curve);
+    return std::unique_ptr<HandleGeom2d_BSplineCurve>(
+      new opencascade::handle<Geom2d_BSplineCurve>(bspline)
+    );
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
 
 // Geom_BSplineCurve - Create from rust vectors (copies data into OCCT arrays)
+// Throws Standard_ConstructionError if parameters are invalid
 inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_from_vectors(
     rust::Slice<const double> pole_coords,  // flattened [x1,y1,z1, x2,y2,z2, ...]
     rust::Slice<const double> weights,      // empty slice for non-rational
@@ -1130,44 +1192,49 @@ inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_from_vectors(
     Standard_Integer degree,
     Standard_Boolean periodic
 ) {
-  Standard_Integer nb_poles = pole_coords.size() / 3;
-  Standard_Integer nb_knots = knots.size();
+  try {
+    Standard_Integer nb_poles = pole_coords.size() / 3;
+    Standard_Integer nb_knots = knots.size();
 
-  // Build poles array
-  TColgp_Array1OfPnt poles_array(1, nb_poles);
-  for (Standard_Integer i = 0; i < nb_poles; i++) {
-    poles_array.SetValue(i + 1, gp_Pnt(
-      pole_coords[i * 3],
-      pole_coords[i * 3 + 1],
-      pole_coords[i * 3 + 2]
-    ));
-  }
-
-  // Build knots array
-  TColStd_Array1OfReal knots_array(1, nb_knots);
-  for (Standard_Integer i = 0; i < nb_knots; i++) {
-    knots_array.SetValue(i + 1, knots[i]);
-  }
-
-  // Build multiplicities array
-  TColStd_Array1OfInteger mults_array(1, nb_knots);
-  for (Standard_Integer i = 0; i < nb_knots; i++) {
-    mults_array.SetValue(i + 1, multiplicities[i]);
-  }
-
-  opencascade::handle<Geom_BSplineCurve> curve;
-
-  if (weights.empty()) {
-    // Non-rational B-spline
-    curve = new Geom_BSplineCurve(poles_array, knots_array, mults_array, degree, periodic);
-  } else {
-    // Rational B-spline (NURBS)
-    TColStd_Array1OfReal weights_array(1, nb_poles);
+    // Build poles array
+    TColgp_Array1OfPnt poles_array(1, nb_poles);
     for (Standard_Integer i = 0; i < nb_poles; i++) {
-      weights_array.SetValue(i + 1, weights[i]);
+      poles_array.SetValue(i + 1, gp_Pnt(
+        pole_coords[i * 3],
+        pole_coords[i * 3 + 1],
+        pole_coords[i * 3 + 2]
+      ));
     }
-    curve = new Geom_BSplineCurve(poles_array, weights_array, knots_array, mults_array, degree, periodic);
-  }
 
-  return std::unique_ptr<HandleGeomBSplineCurve>(new HandleGeomBSplineCurve(curve));
+    // Build knots array
+    TColStd_Array1OfReal knots_array(1, nb_knots);
+    for (Standard_Integer i = 0; i < nb_knots; i++) {
+      knots_array.SetValue(i + 1, knots[i]);
+    }
+
+    // Build multiplicities array
+    TColStd_Array1OfInteger mults_array(1, nb_knots);
+    for (Standard_Integer i = 0; i < nb_knots; i++) {
+      mults_array.SetValue(i + 1, multiplicities[i]);
+    }
+
+    opencascade::handle<Geom_BSplineCurve> curve;
+
+    if (weights.empty()) {
+      // Non-rational B-spline
+      curve = new Geom_BSplineCurve(poles_array, knots_array, mults_array, degree, periodic);
+    } else {
+      // Rational B-spline (NURBS)
+      TColStd_Array1OfReal weights_array(1, nb_poles);
+      for (Standard_Integer i = 0; i < nb_poles; i++) {
+        weights_array.SetValue(i + 1, weights[i]);
+      }
+      curve = new Geom_BSplineCurve(poles_array, weights_array, knots_array, mults_array, degree, periodic);
+    }
+
+    return std::unique_ptr<HandleGeomBSplineCurve>(new HandleGeomBSplineCurve(curve));
+  } catch (const Standard_Failure &e) {
+    get_occt_last_error_ref() = e.GetMessageString();
+    return nullptr;
+  }
 }
