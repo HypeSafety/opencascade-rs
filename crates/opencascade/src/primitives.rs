@@ -148,6 +148,27 @@ impl EdgeIterator {
     }
 }
 
+pub struct VertexIterator {
+    explorer: UniquePtr<ffi::TopExp_Explorer>,
+}
+
+impl Iterator for VertexIterator {
+    type Item = Vertex;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.explorer.More() {
+            let vertex = ffi::TopoDS_cast_to_vertex(self.explorer.Current());
+            let vertex = Vertex { inner: ffi::TopoDS_Vertex_to_owned(vertex) };
+
+            self.explorer.pin_mut().Next();
+
+            Some(vertex)
+        } else {
+            None
+        }
+    }
+}
+
 pub struct FaceIterator {
     explorer: UniquePtr<ffi::TopExp_Explorer>,
 }

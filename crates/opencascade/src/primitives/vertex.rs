@@ -1,6 +1,6 @@
 use crate::primitives::make_point;
 use cxx::UniquePtr;
-use glam::DVec3;
+use glam::{dvec3, DVec3};
 use opencascade_sys::ffi;
 
 pub struct Vertex {
@@ -24,11 +24,22 @@ impl AsRef<Vertex> for Vertex {
 }
 
 impl Vertex {
+    /// Get a reference to the underlying OpenCascade vertex.
+    pub fn inner(&self) -> &ffi::TopoDS_Vertex {
+        &self.inner
+    }
+
     pub fn new(point: DVec3) -> Self {
         let mut make_vertex = ffi::BRepBuilderAPI_MakeVertex_gp_Pnt(&make_point(point));
         let vertex = make_vertex.pin_mut().Vertex();
         let inner = ffi::TopoDS_Vertex_to_owned(vertex);
 
         Self { inner }
+    }
+
+    /// Get the 3D point location of this vertex.
+    pub fn point(&self) -> DVec3 {
+        let pnt = ffi::BRep_Tool_Pnt(&self.inner);
+        dvec3(pnt.X(), pnt.Y(), pnt.Z())
     }
 }

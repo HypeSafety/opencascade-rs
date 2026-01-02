@@ -57,6 +57,11 @@ impl Edge {
         &self.inner
     }
 
+    /// Check if two edges refer to the same underlying TopoDS edge.
+    pub fn is_same(&self, other: &Edge) -> bool {
+        ffi::TopoDS_Edge_IsSame(self.inner(), other.inner())
+    }
+
     fn from_make_edge(mut make_edge: UniquePtr<ffi::BRepBuilderAPI_MakeEdge>) -> Self {
         Self::from_edge(make_edge.pin_mut().Edge())
     }

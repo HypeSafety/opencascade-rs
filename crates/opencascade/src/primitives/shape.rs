@@ -2,7 +2,8 @@ use crate::{
     mesh::{Mesh, Mesher},
     primitives::{
         make_axis_1, make_axis_2, make_dir, make_point, make_point2d, make_vec, BooleanShape,
-        Compound, Edge, EdgeIterator, Face, FaceIterator, ShapeType, Shell, Solid, Vertex, Wire,
+        Compound, Edge, EdgeIterator, Face, FaceIterator, ShapeType, Shell, Solid, Vertex,
+        VertexIterator, Wire,
     },
     Error,
 };
@@ -722,9 +723,40 @@ impl Shape {
         EdgeIterator { explorer }
     }
 
+    pub fn vertices(&self) -> VertexIterator {
+        let explorer =
+            ffi::TopExp_Explorer_ctor(&self.inner, ffi::TopAbs_ShapeEnum::TopAbs_VERTEX);
+        VertexIterator { explorer }
+    }
+
     pub fn faces(&self) -> FaceIterator {
         let explorer = ffi::TopExp_Explorer_ctor(&self.inner, ffi::TopAbs_ShapeEnum::TopAbs_FACE);
         FaceIterator { explorer }
+    }
+
+    /// Return all edges connected to a given vertex in this shape.
+    pub fn edges_connected_to_vertex(&self, vertex: &Vertex) -> Vec<Edge> {
+        let mut data_map = ffi::new_indexed_data_map_of_shape_list_of_shape();
+        ffi::map_shapes_and_ancestors(
+            &self.inner,
+            ffi::TopAbs_ShapeEnum::TopAbs_VERTEX,
+            ffi::TopAbs_ShapeEnum::TopAbs_EDGE,
+            data_map.pin_mut(),
+        );
+
+        let vertex_shape = ffi::cast_vertex_to_shape(vertex.inner());
+        let edges_list = data_map.FindFromKey(vertex_shape);
+        let edge_vec = ffi::shape_list_to_vector(edges_list);
+
+        let mut edges = Vec::new();
+        for i in 0..edge_vec.len() {
+            if let Some(edge_shape) = edge_vec.get(i) {
+                let edge = ffi::TopoDS_cast_to_edge(edge_shape);
+                edges.push(Edge::from_edge(edge));
+            }
+        }
+
+        edges
     }
 
     // TODO(bschwind) - Convert the return type to an iterator.
