@@ -280,6 +280,11 @@ impl Shape {
         Self { inner }
     }
 
+    /// Get a reference to the underlying OpenCascade shape.
+    pub fn inner(&self) -> &ffi::TopoDS_Shape {
+        &self.inner
+    }
+
     /// Make a shape that models empty space.
     pub fn empty() -> Self {
         // NOTE: It may seem like using `TopoDS_Shape()` directly should work,
