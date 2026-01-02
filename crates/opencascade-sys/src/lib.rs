@@ -108,6 +108,9 @@ pub mod ffi {
         type HandleGeomBezierSurface;
         type HandleGeomPlane;
         type HandleGeom2d_Curve;
+        type HandleGeom2d_Line;
+        type HandleGeom2d_Circle;
+        type HandleGeom2d_BSplineCurve;
         type HandleGeom2d_Ellipse;
         type HandleGeom2d_TrimmedCurve;
         type HandleGeom_CylindricalSurface;
@@ -148,6 +151,9 @@ pub mod ffi {
         pub fn IsNull(self: &HandleGeomBezierSurface) -> bool;
         pub fn IsNull(self: &HandleGeomPlane) -> bool;
         pub fn IsNull(self: &HandleGeom2d_Curve) -> bool;
+        pub fn IsNull(self: &HandleGeom2d_Line) -> bool;
+        pub fn IsNull(self: &HandleGeom2d_Circle) -> bool;
+        pub fn IsNull(self: &HandleGeom2d_BSplineCurve) -> bool;
         pub fn IsNull(self: &HandleGeom2d_Ellipse) -> bool;
         pub fn IsNull(self: &HandleGeom2d_TrimmedCurve) -> bool;
         pub fn IsNull(self: &HandleGeom_CylindricalSurface) -> bool;
@@ -997,6 +1003,70 @@ pub mod ffi {
         );
         pub fn IsDone(self: &BRepOffsetAPI_MakeOffsetShape) -> bool;
 
+        // Geom_Plane - Create a plane surface
+        type Geom_Plane;
+
+        pub fn Geom_Plane_ctor(axis: &gp_Ax3) -> UniquePtr<Geom_Plane>;
+        pub fn Geom_Plane_to_handle(plane: UniquePtr<Geom_Plane>) -> UniquePtr<HandleGeomPlane>;
+        pub fn HandleGeomPlane_to_HandleGeomSurface(
+            plane: &HandleGeomPlane,
+        ) -> UniquePtr<HandleGeomSurface>;
+
+        /// Create the XOY coordinate system (Z=0 plane)
+        pub fn gp_Ax3_XOY() -> UniquePtr<gp_Ax3>;
+
+        // gp_Lin2d - 2D line accessors
+        pub fn gp_Lin2d_Location(line: &gp_Lin2d) -> UniquePtr<gp_Pnt2d>;
+        pub fn gp_Lin2d_Direction(line: &gp_Lin2d) -> UniquePtr<gp_Dir2d>;
+
+        // gp_Dir2d accessors
+        pub fn X(self: &gp_Dir2d) -> f64;
+        pub fn Y(self: &gp_Dir2d) -> f64;
+
+        // gp_Circ2d - 2D circle accessors
+        pub fn gp_Circ2d_Location(circ: &gp_Circ2d) -> UniquePtr<gp_Pnt2d>;
+        pub fn gp_Circ2d_Radius(circ: &gp_Circ2d) -> f64;
+
+        // Geom2d_Curve type detection - returns type name string
+        pub fn Geom2d_Curve_DynamicType(curve: &HandleGeom2d_Curve) -> String;
+
+        // Geom2d_Line - downcast and accessors
+        pub fn HandleGeom2d_Curve_to_Line(
+            curve: &HandleGeom2d_Curve,
+        ) -> UniquePtr<HandleGeom2d_Line>;
+        pub fn Geom2d_Line_Lin2d(line: &HandleGeom2d_Line) -> UniquePtr<gp_Lin2d>;
+
+        // Geom2d_Circle - downcast and accessors
+        pub fn HandleGeom2d_Curve_to_Circle(
+            curve: &HandleGeom2d_Curve,
+        ) -> UniquePtr<HandleGeom2d_Circle>;
+        pub fn Geom2d_Circle_Circ2d(circle: &HandleGeom2d_Circle) -> UniquePtr<gp_Circ2d>;
+
+        // Geom2d_BSplineCurve - downcast and accessors
+        pub fn HandleGeom2d_Curve_to_BSplineCurve(
+            curve: &HandleGeom2d_Curve,
+        ) -> UniquePtr<HandleGeom2d_BSplineCurve>;
+        pub fn Geom2d_BSplineCurve_Degree(curve: &HandleGeom2d_BSplineCurve) -> i32;
+        pub fn Geom2d_BSplineCurve_NbPoles(curve: &HandleGeom2d_BSplineCurve) -> i32;
+        pub fn Geom2d_BSplineCurve_NbKnots(curve: &HandleGeom2d_BSplineCurve) -> i32;
+        pub fn Geom2d_BSplineCurve_Pole(
+            curve: &HandleGeom2d_BSplineCurve,
+            index: i32,
+        ) -> UniquePtr<gp_Pnt2d>;
+        pub fn Geom2d_BSplineCurve_Knot(curve: &HandleGeom2d_BSplineCurve, index: i32) -> f64;
+        pub fn Geom2d_BSplineCurve_Multiplicity(
+            curve: &HandleGeom2d_BSplineCurve,
+            index: i32,
+        ) -> i32;
+        pub fn Geom2d_BSplineCurve_Weight(curve: &HandleGeom2d_BSplineCurve, index: i32) -> f64;
+        pub fn Geom2d_BSplineCurve_IsRational(curve: &HandleGeom2d_BSplineCurve) -> bool;
+        pub fn Geom2d_BSplineCurve_IsPeriodic(curve: &HandleGeom2d_BSplineCurve) -> bool;
+        pub fn Geom2d_BSplineCurve_SetPole(
+            curve: &HandleGeom2d_BSplineCurve,
+            index: i32,
+            pole: &gp_Pnt2d,
+        );
+
         type GeomAbs_JoinType;
 
         // Solids
@@ -1143,6 +1213,8 @@ pub mod ffi {
         type gp_Dir;
         type gp_Dir2d;
         type gp_Ax2d;
+        type gp_Lin2d;
+        type gp_Circ2d;
         pub fn gp_OX() -> &'static gp_Ax1;
         pub fn gp_OY() -> &'static gp_Ax1;
         pub fn gp_OZ() -> &'static gp_Ax1;

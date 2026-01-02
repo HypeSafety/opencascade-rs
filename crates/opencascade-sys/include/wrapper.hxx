@@ -50,8 +50,13 @@
 #include <GC_MakeArcOfCircle.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GProp_GProps.hxx>
+#include <Geom2d_BSplineCurve.hxx>
+#include <Geom2d_Circle.hxx>
 #include <Geom2d_Ellipse.hxx>
+#include <Geom2d_Line.hxx>
 #include <Geom2d_TrimmedCurve.hxx>
+#include <gp_Circ2d.hxx>
+#include <gp_Lin2d.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <GeomAbs_CurveType.hxx>
@@ -123,6 +128,9 @@ typedef opencascade::handle<Geom_Surface> HandleGeomSurface;
 typedef opencascade::handle<Geom_BezierSurface> HandleGeomBezierSurface;
 typedef opencascade::handle<Geom_Plane> HandleGeomPlane;
 typedef opencascade::handle<Geom2d_Curve> HandleGeom2d_Curve;
+typedef opencascade::handle<Geom2d_Line> HandleGeom2d_Line;
+typedef opencascade::handle<Geom2d_Circle> HandleGeom2d_Circle;
+typedef opencascade::handle<Geom2d_BSplineCurve> HandleGeom2d_BSplineCurve;
 typedef opencascade::handle<Geom2d_Ellipse> HandleGeom2d_Ellipse;
 typedef opencascade::handle<Geom2d_TrimmedCurve> HandleGeom2d_TrimmedCurve;
 typedef opencascade::handle<Geom_CylindricalSurface> HandleGeom_CylindricalSurface;
@@ -934,4 +942,132 @@ inline void BRepOffsetAPI_MakeOffsetShape_PerformByJoin(
     Standard_Boolean removeIntEdges
 ) {
   maker.PerformByJoin(shape, offset, tolerance, mode, intersection, selfInter, join, removeIntEdges);
+}
+
+// Geom_Plane - Create a plane from gp_Ax3
+inline std::unique_ptr<Geom_Plane> Geom_Plane_ctor(const gp_Ax3 &axis) {
+  return std::unique_ptr<Geom_Plane>(new Geom_Plane(axis));
+}
+
+inline std::unique_ptr<HandleGeomPlane> Geom_Plane_to_handle(std::unique_ptr<Geom_Plane> plane) {
+  return std::unique_ptr<HandleGeomPlane>(new opencascade::handle<Geom_Plane>(plane.release()));
+}
+
+inline std::unique_ptr<HandleGeomSurface> HandleGeomPlane_to_HandleGeomSurface(
+    const HandleGeomPlane &plane
+) {
+  return std::unique_ptr<HandleGeomSurface>(new opencascade::handle<Geom_Surface>(plane));
+}
+
+// gp_Ax3 - Create XOY coordinate system (Z=0 plane)
+inline std::unique_ptr<gp_Ax3> gp_Ax3_XOY() {
+  return std::unique_ptr<gp_Ax3>(new gp_Ax3(gp::XOY()));
+}
+
+// gp_Lin2d - 2D line
+inline std::unique_ptr<gp_Pnt2d> gp_Lin2d_Location(const gp_Lin2d &line) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(line.Location()));
+}
+
+inline std::unique_ptr<gp_Dir2d> gp_Lin2d_Direction(const gp_Lin2d &line) {
+  return std::unique_ptr<gp_Dir2d>(new gp_Dir2d(line.Direction()));
+}
+
+// gp_Circ2d - 2D circle
+inline std::unique_ptr<gp_Pnt2d> gp_Circ2d_Location(const gp_Circ2d &circ) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(circ.Location()));
+}
+
+inline Standard_Real gp_Circ2d_Radius(const gp_Circ2d &circ) {
+  return circ.Radius();
+}
+
+// Geom2d_Curve type detection - returns the type name string
+inline rust::String Geom2d_Curve_DynamicType(const HandleGeom2d_Curve &curve) {
+  if (curve.IsNull()) return "";
+  return std::string(curve->DynamicType()->Name());
+}
+
+// Geom2d_Line - downcast and accessors
+inline std::unique_ptr<HandleGeom2d_Line> HandleGeom2d_Curve_to_Line(
+    const HandleGeom2d_Curve &curve
+) {
+  HandleGeom2d_Line line = opencascade::handle<Geom2d_Line>::DownCast(curve);
+  return std::unique_ptr<HandleGeom2d_Line>(new opencascade::handle<Geom2d_Line>(line));
+}
+
+inline std::unique_ptr<gp_Lin2d> Geom2d_Line_Lin2d(const HandleGeom2d_Line &line) {
+  return std::unique_ptr<gp_Lin2d>(new gp_Lin2d(line->Lin2d()));
+}
+
+// Geom2d_Circle - downcast and accessors
+inline std::unique_ptr<HandleGeom2d_Circle> HandleGeom2d_Curve_to_Circle(
+    const HandleGeom2d_Curve &curve
+) {
+  HandleGeom2d_Circle circle = opencascade::handle<Geom2d_Circle>::DownCast(curve);
+  return std::unique_ptr<HandleGeom2d_Circle>(new opencascade::handle<Geom2d_Circle>(circle));
+}
+
+inline std::unique_ptr<gp_Circ2d> Geom2d_Circle_Circ2d(const HandleGeom2d_Circle &circle) {
+  return std::unique_ptr<gp_Circ2d>(new gp_Circ2d(circle->Circ2d()));
+}
+
+// Geom2d_BSplineCurve - downcast and accessors
+inline std::unique_ptr<HandleGeom2d_BSplineCurve> HandleGeom2d_Curve_to_BSplineCurve(
+    const HandleGeom2d_Curve &curve
+) {
+  HandleGeom2d_BSplineCurve bspline = opencascade::handle<Geom2d_BSplineCurve>::DownCast(curve);
+  return std::unique_ptr<HandleGeom2d_BSplineCurve>(
+    new opencascade::handle<Geom2d_BSplineCurve>(bspline)
+  );
+}
+
+inline Standard_Integer Geom2d_BSplineCurve_Degree(const HandleGeom2d_BSplineCurve &curve) {
+  return curve->Degree();
+}
+
+inline Standard_Integer Geom2d_BSplineCurve_NbPoles(const HandleGeom2d_BSplineCurve &curve) {
+  return curve->NbPoles();
+}
+
+inline Standard_Integer Geom2d_BSplineCurve_NbKnots(const HandleGeom2d_BSplineCurve &curve) {
+  return curve->NbKnots();
+}
+
+inline std::unique_ptr<gp_Pnt2d> Geom2d_BSplineCurve_Pole(
+    const HandleGeom2d_BSplineCurve &curve, Standard_Integer index
+) {
+  return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(curve->Pole(index)));
+}
+
+inline Standard_Real Geom2d_BSplineCurve_Knot(
+    const HandleGeom2d_BSplineCurve &curve, Standard_Integer index
+) {
+  return curve->Knot(index);
+}
+
+inline Standard_Integer Geom2d_BSplineCurve_Multiplicity(
+    const HandleGeom2d_BSplineCurve &curve, Standard_Integer index
+) {
+  return curve->Multiplicity(index);
+}
+
+inline Standard_Real Geom2d_BSplineCurve_Weight(
+    const HandleGeom2d_BSplineCurve &curve, Standard_Integer index
+) {
+  return curve->Weight(index);
+}
+
+inline Standard_Boolean Geom2d_BSplineCurve_IsRational(const HandleGeom2d_BSplineCurve &curve) {
+  return curve->IsRational();
+}
+
+inline Standard_Boolean Geom2d_BSplineCurve_IsPeriodic(const HandleGeom2d_BSplineCurve &curve) {
+  return curve->IsPeriodic();
+}
+
+inline void Geom2d_BSplineCurve_SetPole(
+    const HandleGeom2d_BSplineCurve &curve, Standard_Integer index, const gp_Pnt2d &pole
+) {
+  curve->SetPole(index, pole);
 }
