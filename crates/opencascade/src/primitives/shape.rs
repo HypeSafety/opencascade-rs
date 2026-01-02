@@ -274,7 +274,8 @@ impl TorusBuilder {
 }
 
 impl Shape {
-    pub(crate) fn from_shape(shape: &ffi::TopoDS_Shape) -> Self {
+    /// Create a Shape from a raw TopoDS_Shape reference.
+    pub fn from_shape(shape: &ffi::TopoDS_Shape) -> Self {
         let inner = ffi::TopoDS_Shape_to_owned(shape);
 
         Self { inner }
