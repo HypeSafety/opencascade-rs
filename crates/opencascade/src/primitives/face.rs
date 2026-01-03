@@ -34,6 +34,20 @@ impl Face {
         &self.inner
     }
 
+    /// Check if two faces refer to the same underlying TopoDS face.
+    pub fn is_same(&self, other: &Face) -> bool {
+        ffi::TopoDS_Face_IsSame(self.inner(), other.inner())
+    }
+
+    /// Returns a hash code for this face based on its underlying TopoDS_Face.
+    ///
+    /// This hash is stable for the lifetime of the shape and can be used to
+    /// store face identifiers in hash sets or maps. Two faces that refer to
+    /// the same underlying topology will have the same hash code.
+    pub fn hash_code(&self) -> u64 {
+        ffi::TopoDS_Face_hash_code(self.inner()) as u64
+    }
+
     fn from_make_face(make_face: UniquePtr<ffi::BRepBuilderAPI_MakeFace>) -> Self {
         Self::from_face(make_face.Face())
     }

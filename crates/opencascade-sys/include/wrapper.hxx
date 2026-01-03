@@ -347,6 +347,10 @@ inline const TopoDS_Shape &cast_compound_to_shape(const TopoDS_Compound &compoun
 inline bool TopoDS_Face_IsSame(const TopoDS_Face &f1, const TopoDS_Face &f2) { return f1.IsSame(f2); }
 inline bool TopoDS_Edge_IsSame(const TopoDS_Edge &e1, const TopoDS_Edge &e2) { return e1.IsSame(e2); }
 
+// TopoDS hash codes - uses std::hash specialization from TopoDS_*.hxx headers
+inline size_t TopoDS_Edge_hash_code(const TopoDS_Edge &edge) { return std::hash<TopoDS_Edge>{}(edge); }
+inline size_t TopoDS_Face_hash_code(const TopoDS_Face &face) { return std::hash<TopoDS_Face>{}(face); }
+
 // Compound shapes
 inline std::unique_ptr<TopoDS_Shape> TopoDS_Compound_as_shape(std::unique_ptr<TopoDS_Compound> compound) {
   return compound;

@@ -462,6 +462,10 @@ pub mod ffi {
         pub fn TopoDS_Face_IsSame(f1: &TopoDS_Face, f2: &TopoDS_Face) -> bool;
         pub fn TopoDS_Edge_IsSame(e1: &TopoDS_Edge, e2: &TopoDS_Edge) -> bool;
 
+        // TopoDS hash codes
+        pub fn TopoDS_Edge_hash_code(edge: &TopoDS_Edge) -> usize;
+        pub fn TopoDS_Face_hash_code(face: &TopoDS_Face) -> usize;
+
         #[cxx_name = "Move"]
         pub fn translate(
             self: Pin<&mut TopoDS_Shape>,

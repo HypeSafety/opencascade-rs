@@ -62,6 +62,15 @@ impl Edge {
         ffi::TopoDS_Edge_IsSame(self.inner(), other.inner())
     }
 
+    /// Returns a hash code for this edge based on its underlying TopoDS_Edge.
+    ///
+    /// This hash is stable for the lifetime of the shape and can be used to
+    /// store edge identifiers in hash sets or maps. Two edges that refer to
+    /// the same underlying topology will have the same hash code.
+    pub fn hash_code(&self) -> u64 {
+        ffi::TopoDS_Edge_hash_code(self.inner()) as u64
+    }
+
     fn from_make_edge(mut make_edge: UniquePtr<ffi::BRepBuilderAPI_MakeEdge>) -> Self {
         Self::from_edge(make_edge.pin_mut().Edge())
     }
