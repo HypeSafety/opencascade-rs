@@ -542,6 +542,41 @@ impl Face {
         )
     }
 
+    /// Returns the principal curvatures at the given UV parameters.
+    ///
+    /// Returns `Some((min_curvature, max_curvature))` if curvature is defined at
+    /// the point, or `None` if curvature cannot be computed (e.g., at a singularity).
+    ///
+    /// For a cylinder: one curvature is ±1/radius, the other is 0.
+    /// For a plane: both curvatures are 0.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // FreeCAD parity for bend direction detection
+    /// let (curv_a, curv_b) = face.curvature_at(0.0, 0.0)?;
+    /// let eps = 1e-7;
+    /// if curv_a < 0.0 && curv_b.abs() < eps {
+    ///     // Concave bend detected
+    /// }
+    /// ```
+    pub fn curvature_at(&self, u: f64, v: f64) -> Option<(f64, f64)> {
+        let surface = ffi::BRepAdaptor_Surface_ctor(&self.inner, false);
+
+        // N=2 means compute up to second derivatives (required for curvature)
+        // Resolution is the precision for considering values as zero
+        let mut props = ffi::BRepLProp_SLProps_ctor(&surface, u, v, 2, 1e-10);
+
+        if !ffi::BRepLProp_SLProps_IsCurvatureDefined(props.pin_mut()) {
+            return None;
+        }
+
+        let min_curv = ffi::BRepLProp_SLProps_MinCurvature(props.pin_mut());
+        let max_curv = ffi::BRepLProp_SLProps_MaxCurvature(props.pin_mut());
+
+        Some((min_curv, max_curv))
+    }
+
     /// Get the 2D parametric curve (PCurve) of an edge on this face.
     ///
     /// Returns the curve and its parameter range (first, last).
@@ -868,5 +903,57 @@ mod tests {
             }
         }
         assert!(found_cylinder, "Expected to find a cylindrical face");
+    }
+
+    #[test]
+    fn test_curvature_at_plane() {
+        // Create a rectangular planar face on the XY plane
+        let face = Workplane::xy().rect(10.0, 5.0).to_face();
+
+        // At any point on a plane, both curvatures should be 0
+        let (curv_min, curv_max) = face.curvature_at(0.0, 0.0).expect("Curvature should be defined on plane");
+        assert!(
+            curv_min.abs() < 1e-10 && curv_max.abs() < 1e-10,
+            "Expected zero curvature on plane, got ({}, {})",
+            curv_min, curv_max
+        );
+    }
+
+    #[test]
+    fn test_curvature_at_cylinder() {
+        // Create a cylinder (radius 5, height 10)
+        let cylinder = Shape::cylinder_radius_height(5.0, 10.0);
+
+        // Find a cylindrical face and check its curvature
+        for face in cylinder.faces() {
+            if let SurfaceType::Cylinder { radius, .. } = face.surface_type() {
+                // Get UV bounds to find a valid point
+                let (umin, umax, vmin, vmax) = face.uv_bounds();
+                let u = (umin + umax) / 2.0;
+                let v = (vmin + vmax) / 2.0;
+
+                let (curv_min, curv_max) = face.curvature_at(u, v)
+                    .expect("Curvature should be defined on cylinder");
+
+                // One curvature should be ~0 (along axis)
+                // Other should be ~1/radius (around circumference)
+                // Note: sign depends on orientation
+                let expected_curv = 1.0 / radius;
+                let curv_values = [curv_min.abs(), curv_max.abs()];
+
+                assert!(
+                    curv_values.iter().any(|&c| c < 1e-10),
+                    "Expected one curvature near 0, got ({}, {})",
+                    curv_min, curv_max
+                );
+                assert!(
+                    curv_values.iter().any(|&c| (c - expected_curv).abs() < 0.001),
+                    "Expected one curvature near {}, got ({}, {})",
+                    expected_curv, curv_min, curv_max
+                );
+                return;
+            }
+        }
+        panic!("Expected to find a cylindrical face");
     }
 }

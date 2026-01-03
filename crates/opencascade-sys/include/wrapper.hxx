@@ -832,6 +832,18 @@ inline std::unique_ptr<gp_Vec> BRepLProp_SLProps_D1V(BRepLProp_SLProps &props) {
   return std::unique_ptr<gp_Vec>(new gp_Vec(props.D1V()));
 }
 
+inline bool BRepLProp_SLProps_IsCurvatureDefined(BRepLProp_SLProps &props) {
+  return props.IsCurvatureDefined();
+}
+
+inline double BRepLProp_SLProps_MinCurvature(BRepLProp_SLProps &props) {
+  return props.MinCurvature();
+}
+
+inline double BRepLProp_SLProps_MaxCurvature(BRepLProp_SLProps &props) {
+  return props.MaxCurvature();
+}
+
 // BRepAdaptor_Curve2d - 2D curve on a face surface
 inline std::unique_ptr<BRepAdaptor_Curve2d> BRepAdaptor_Curve2d_ctor(
     const TopoDS_Edge &edge, const TopoDS_Face &face

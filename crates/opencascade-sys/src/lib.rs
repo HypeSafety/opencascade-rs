@@ -749,6 +749,9 @@ pub mod ffi {
         pub fn BRepLProp_SLProps_Value(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Pnt>;
         pub fn BRepLProp_SLProps_D1U(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Vec>;
         pub fn BRepLProp_SLProps_D1V(props: Pin<&mut BRepLProp_SLProps>) -> UniquePtr<gp_Vec>;
+        pub fn BRepLProp_SLProps_IsCurvatureDefined(props: Pin<&mut BRepLProp_SLProps>) -> bool;
+        pub fn BRepLProp_SLProps_MinCurvature(props: Pin<&mut BRepLProp_SLProps>) -> f64;
+        pub fn BRepLProp_SLProps_MaxCurvature(props: Pin<&mut BRepLProp_SLProps>) -> f64;
 
         // BRepAdaptor_Curve2d - 2D curve on a face surface
         type BRepAdaptor_Curve2d;
