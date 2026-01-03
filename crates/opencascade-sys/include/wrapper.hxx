@@ -779,6 +779,11 @@ inline std::unique_ptr<gp_Ax3> gp_Torus_Position(const gp_Torus &torus) {
   return std::unique_ptr<gp_Ax3>(new gp_Ax3(torus.Position()));
 }
 
+// BRepAdaptor_Surface::Direction - for extrusion/revolution surfaces
+inline std::unique_ptr<gp_Dir> BRepAdaptor_Surface_Direction(const BRepAdaptor_Surface &surface) {
+  return std::unique_ptr<gp_Dir>(new gp_Dir(surface.Direction()));
+}
+
 // gp_Ax3 methods
 inline std::unique_ptr<gp_Pnt> gp_Ax3_Location(const gp_Ax3 &axis) {
   return std::unique_ptr<gp_Pnt>(new gp_Pnt(axis.Location()));

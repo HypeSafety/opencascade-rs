@@ -720,6 +720,11 @@ pub mod ffi {
         pub fn gp_Torus_Axis(torus: &gp_Torus) -> UniquePtr<gp_Ax1>;
         pub fn gp_Torus_Position(torus: &gp_Torus) -> UniquePtr<gp_Ax3>;
 
+        // BRepAdaptor_Surface direction (for extrusion/revolution surfaces)
+        pub fn BRepAdaptor_Surface_Direction(
+            surface: &BRepAdaptor_Surface,
+        ) -> UniquePtr<gp_Dir>;
+
         // gp_Ax3 additional methods
         pub fn gp_Ax3_Location(axis: &gp_Ax3) -> UniquePtr<gp_Pnt>;
         pub fn gp_Ax3_Direction(axis: &gp_Ax3) -> UniquePtr<gp_Dir>;
