@@ -1073,6 +1073,9 @@ pub mod ffi {
         pub fn HandleGeom2d_Curve_to_BSplineCurve(
             curve: &HandleGeom2d_Curve,
         ) -> UniquePtr<HandleGeom2d_BSplineCurve>;
+        pub fn HandleGeom2d_BSplineCurve_to_HandleGeom2d_Curve(
+            curve: &HandleGeom2d_BSplineCurve,
+        ) -> UniquePtr<HandleGeom2d_Curve>;
         pub fn Geom2d_BSplineCurve_Degree(curve: &HandleGeom2d_BSplineCurve) -> i32;
         pub fn Geom2d_BSplineCurve_NbPoles(curve: &HandleGeom2d_BSplineCurve) -> i32;
         pub fn Geom2d_BSplineCurve_NbKnots(curve: &HandleGeom2d_BSplineCurve) -> i32;

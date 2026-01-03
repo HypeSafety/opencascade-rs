@@ -1089,6 +1089,12 @@ inline std::unique_ptr<HandleGeom2d_BSplineCurve> HandleGeom2d_Curve_to_BSplineC
   );
 }
 
+inline std::unique_ptr<HandleGeom2d_Curve> HandleGeom2d_BSplineCurve_to_HandleGeom2d_Curve(
+    const HandleGeom2d_BSplineCurve &curve
+) {
+  return std::unique_ptr<HandleGeom2d_Curve>(new opencascade::handle<Geom2d_Curve>(curve));
+}
+
 inline Standard_Integer Geom2d_BSplineCurve_Degree(const HandleGeom2d_BSplineCurve &curve) {
   return curve->Degree();
 }
