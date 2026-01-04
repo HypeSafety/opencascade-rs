@@ -759,6 +759,31 @@ impl Shape {
         edges
     }
 
+    /// Return all faces that share a given edge in this shape.
+    pub fn faces_sharing_edge(&self, edge: &Edge) -> Vec<Face> {
+        let mut data_map = ffi::new_indexed_data_map_of_shape_list_of_shape();
+        ffi::map_shapes_and_ancestors(
+            &self.inner,
+            ffi::TopAbs_ShapeEnum::TopAbs_EDGE,
+            ffi::TopAbs_ShapeEnum::TopAbs_FACE,
+            data_map.pin_mut(),
+        );
+
+        let edge_shape = ffi::cast_edge_to_shape(&edge.inner);
+        let faces_list = data_map.FindFromKey(edge_shape);
+        let face_vec = ffi::shape_list_to_vector(faces_list);
+
+        let mut faces = Vec::new();
+        for i in 0..face_vec.len() {
+            if let Some(face_shape) = face_vec.get(i) {
+                let face = ffi::TopoDS_cast_to_face(face_shape);
+                faces.push(Face::from_face(face));
+            }
+        }
+
+        faces
+    }
+
     // TODO(bschwind) - Convert the return type to an iterator.
     pub fn faces_along_line(&self, line_origin: DVec3, line_dir: DVec3) -> Vec<LineFaceHitPoint> {
         let mut intersector = ffi::BRepIntCurveSurface_Inter_ctor();
