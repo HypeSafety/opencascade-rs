@@ -19,6 +19,7 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepFeat_MakeCylindricalHole.hxx>
 #include <BRepFeat_MakeDPrism.hxx>
+#include <BRepFeat_SplitShape.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepFilletAPI_MakeFillet2d.hxx>
@@ -439,6 +440,30 @@ inline std::unique_ptr<gp_Pnt> BRepIntCurveSurface_Inter_point(const BRepIntCurv
 // BRepFeat
 inline std::unique_ptr<BRepFeat_MakeCylindricalHole> BRepFeat_MakeCylindricalHole_ctor() {
   return std::unique_ptr<BRepFeat_MakeCylindricalHole>(new BRepFeat_MakeCylindricalHole());
+}
+
+inline std::unique_ptr<BRepFeat_SplitShape> BRepFeat_SplitShape_ctor() {
+  return std::unique_ptr<BRepFeat_SplitShape>(new BRepFeat_SplitShape());
+}
+
+inline std::unique_ptr<BRepFeat_SplitShape> BRepFeat_SplitShape_ctor_shape(const TopoDS_Shape &shape) {
+  return std::unique_ptr<BRepFeat_SplitShape>(new BRepFeat_SplitShape(shape));
+}
+
+inline void BRepFeat_SplitShape_add_edge_on_face(BRepFeat_SplitShape &splitter, const TopoDS_Edge &edge, const TopoDS_Face &face) {
+  splitter.Add(edge, face);
+}
+
+inline void BRepFeat_SplitShape_add_wire_on_face(BRepFeat_SplitShape &splitter, const TopoDS_Wire &wire, const TopoDS_Face &face) {
+  splitter.Add(wire, face);
+}
+
+inline void BRepFeat_SplitShape_add_edge_on_edge(BRepFeat_SplitShape &splitter, const TopoDS_Edge &edge, const TopoDS_Edge &edge_on) {
+  splitter.Add(edge, edge_on);
+}
+
+inline void BRepFeat_SplitShape_add_compound_on_face(BRepFeat_SplitShape &splitter, const TopoDS_Compound &comp, const TopoDS_Face &face) {
+  splitter.Add(comp, face);
 }
 
 // Data Import

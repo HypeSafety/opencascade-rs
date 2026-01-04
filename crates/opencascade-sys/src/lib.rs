@@ -1579,6 +1579,67 @@ pub mod ffi {
         pub fn Build(self: Pin<&mut BRepFeat_MakeCylindricalHole>);
         pub fn Shape(self: &BRepFeat_MakeCylindricalHole) -> &TopoDS_Shape;
 
+        // BRepFeat_SplitShape - splits faces along edges or wires
+        type BRepFeat_SplitShape;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepFeat_SplitShape_ctor() -> UniquePtr<BRepFeat_SplitShape>;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepFeat_SplitShape_ctor_shape(
+            shape: &TopoDS_Shape,
+        ) -> UniquePtr<BRepFeat_SplitShape>;
+
+        pub fn Init(self: Pin<&mut BRepFeat_SplitShape>, shape: &TopoDS_Shape);
+
+        // Add an edge as a split line on a face
+        pub fn BRepFeat_SplitShape_add_edge_on_face(
+            splitter: Pin<&mut BRepFeat_SplitShape>,
+            edge: &TopoDS_Edge,
+            face: &TopoDS_Face,
+        );
+
+        // Add a wire as a split line on a face
+        pub fn BRepFeat_SplitShape_add_wire_on_face(
+            splitter: Pin<&mut BRepFeat_SplitShape>,
+            wire: &TopoDS_Wire,
+            face: &TopoDS_Face,
+        );
+
+        // Add an edge on an existing edge
+        pub fn BRepFeat_SplitShape_add_edge_on_edge(
+            splitter: Pin<&mut BRepFeat_SplitShape>,
+            edge: &TopoDS_Edge,
+            edge_on: &TopoDS_Edge,
+        );
+
+        // Add a compound of edges on a face
+        pub fn BRepFeat_SplitShape_add_compound_on_face(
+            splitter: Pin<&mut BRepFeat_SplitShape>,
+            comp: &TopoDS_Compound,
+            face: &TopoDS_Face,
+        );
+
+        pub fn Build(self: Pin<&mut BRepFeat_SplitShape>, progress: &Message_ProgressRange);
+        pub fn IsDone(self: &BRepFeat_SplitShape) -> bool;
+        pub fn Shape(self: Pin<&mut BRepFeat_SplitShape>) -> &TopoDS_Shape;
+        pub fn IsDeleted(self: Pin<&mut BRepFeat_SplitShape>, shape: &TopoDS_Shape) -> bool;
+
+        // Returns the list of faces modified from the original shape
+        pub fn Modified(
+            self: Pin<&mut BRepFeat_SplitShape>,
+            shape: &TopoDS_Shape,
+        ) -> &TopTools_ListOfShape;
+
+        // Returns the faces on the left of the projected wires
+        pub fn Left(self: &BRepFeat_SplitShape) -> &TopTools_ListOfShape;
+
+        // Returns the faces on the right of the projected wires
+        pub fn Right(self: &BRepFeat_SplitShape) -> &TopTools_ListOfShape;
+
+        // Returns the faces directly on the left of the projected wires
+        pub fn DirectLeft(self: &BRepFeat_SplitShape) -> &TopTools_ListOfShape;
+
         // Data Import
         type STEPControl_Reader;
         type IGESControl_Reader;
