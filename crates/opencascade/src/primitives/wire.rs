@@ -38,7 +38,8 @@ impl Default for EdgeConnection {
 }
 
 impl Wire {
-    pub(crate) fn from_wire(wire: &ffi::TopoDS_Wire) -> Self {
+    /// Create a Wire from a TopoDS_Wire reference.
+    pub fn from_wire(wire: &ffi::TopoDS_Wire) -> Self {
         let inner = ffi::TopoDS_Wire_to_owned(wire);
 
         Self { inner }
