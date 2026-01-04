@@ -54,7 +54,7 @@ pub fn shape() -> Shape {
         .translate(dvec3(-tx / 2.0, -ty / 2.0, 0.0))
         .transform(dvec3(0.0, 0.0, height), dvec3(1.0, 0.0, 0.0), angle);
 
-    let keycap = Solid::loft([&base, &mid, &top_wire]);
+    let keycap = Solid::loft([&base, &mid, &top_wire]).unwrap();
 
     let scoop = if convex {
         let scoop = Workplane::yz()
@@ -96,7 +96,7 @@ pub fn shape() -> Shape {
             .line_to(-by / 2.0, height)
             .close();
 
-        Solid::loft([&scoop_right, &scoop_mid, &scoop_left])
+        Solid::loft([&scoop_right, &scoop_mid, &scoop_left]).unwrap()
     };
 
     let keycap = keycap.subtract(&scoop).fillet_new_edges(0.6);
@@ -111,7 +111,7 @@ pub fn shape() -> Shape {
         .transformed(dvec3(0.0, 0.0, (height / 4.0) + height - height / 4.0 - 4.5), RVec::x(angle))
         .rect(tx - thickness * 2.0 + 0.5, ty - thickness * 2.0 + 0.5);
 
-    let shell: Shape = Solid::loft([&shell_bottom, &shell_mid, &shell_top]).into();
+    let shell: Shape = Solid::loft([&shell_bottom, &shell_mid, &shell_top]).unwrap().into();
 
     let mut keycap = keycap.subtract(&shell);
 

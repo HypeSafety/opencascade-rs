@@ -9,7 +9,7 @@ pub fn shape() -> Shape {
     let base = Workplane::xy().rect(10.0, 10.0).chamfer(2.0);
     let top = Workplane::xy().rect(10.0, 10.0).translate(dvec3(0.0, 0.0, 10.0)).chamfer(1.0);
 
-    let chamfered_box = Solid::loft([&base, &top]);
+    let chamfered_box = Solid::loft([&base, &top]).unwrap();
 
     // Insert the workplane into the chamfered box area so union returns edges
     let handle = Workplane::xy().translated(dvec3(0.0, 0.0, 0.1)).rect(5.0, 5.0);

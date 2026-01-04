@@ -41,7 +41,7 @@ impl Solid {
         Compound::from_compound(compound)
     }
 
-    pub fn loft<T: AsRef<Wire>>(wires: impl IntoIterator<Item = T>) -> Self {
+    pub fn loft<T: AsRef<Wire>>(wires: impl IntoIterator<Item = T>) -> Result<Self, Error> {
         let is_solid = true;
         let mut make_loft = ffi::BRepOffsetAPI_ThruSections_ctor(is_solid);
 
@@ -51,11 +51,16 @@ impl Solid {
 
         // Set to CheckCompatibility to `true` to avoid twisted results.
         make_loft.pin_mut().CheckCompatibility(true);
+        make_loft.pin_mut().Build(&ffi::Message_ProgressRange_ctor());
+
+        if !make_loft.IsDone() {
+            return Err(Error::LoftFailed);
+        }
 
         let shape = make_loft.pin_mut().Shape();
         let solid = ffi::TopoDS_cast_to_solid(shape);
 
-        Self::from_solid(solid)
+        Ok(Self::from_solid(solid))
     }
 
     #[must_use]

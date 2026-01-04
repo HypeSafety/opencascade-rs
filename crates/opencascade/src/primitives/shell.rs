@@ -2,6 +2,7 @@ use cxx::UniquePtr;
 use opencascade_sys::ffi;
 
 use crate::primitives::Wire;
+use crate::Error;
 
 pub struct Shell {
     pub(crate) inner: UniquePtr<ffi::TopoDS_Shell>,
@@ -20,7 +21,7 @@ impl Shell {
         Self { inner }
     }
 
-    pub fn loft<T: AsRef<Wire>>(wires: impl IntoIterator<Item = T>) -> Self {
+    pub fn loft<T: AsRef<Wire>>(wires: impl IntoIterator<Item = T>) -> Result<Self, Error> {
         let is_solid = false;
         let mut make_loft = ffi::BRepOffsetAPI_ThruSections_ctor(is_solid);
 
@@ -30,10 +31,15 @@ impl Shell {
 
         // Set CheckCompatibility to `true` to avoid twisted results.
         make_loft.pin_mut().CheckCompatibility(true);
+        make_loft.pin_mut().Build(&ffi::Message_ProgressRange_ctor());
+
+        if !make_loft.IsDone() {
+            return Err(Error::LoftFailed);
+        }
 
         let shape = make_loft.pin_mut().Shape();
         let shell = ffi::TopoDS_cast_to_shell(shape);
 
-        Self::from_shell(shell)
+        Ok(Self::from_shell(shell))
     }
 }
