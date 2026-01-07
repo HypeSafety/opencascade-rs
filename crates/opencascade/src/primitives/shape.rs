@@ -853,6 +853,26 @@ impl Shape {
 
         Self::from_shape(make_hole.pin_mut().Shape())
     }
+
+    /// Compute the minimum distance from this shape to another shape.
+    ///
+    /// Returns a `DistanceResult` containing the minimum distance,
+    /// all closest point pairs, and parametric information.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let box1 = Shape::box_with_dimensions(10.0, 10.0, 10.0);
+    /// let box2 = Shape::box_with_dimensions(5.0, 5.0, 5.0).translate(dvec3(20.0, 0.0, 0.0));
+    ///
+    /// let result = box1.distance_to(&box2)?;
+    /// println!("Distance: {}", result.distance);
+    /// ```
+    pub fn distance_to(
+        &self,
+        other: &Shape,
+    ) -> Result<crate::extrema::DistanceResult, Error> {
+        crate::extrema::distance_between_shapes(self, other)
+    }
 }
 
 /// Information about a point where a line hits (i.e. intersects) a face

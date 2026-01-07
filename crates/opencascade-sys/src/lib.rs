@@ -86,6 +86,14 @@ pub mod ffi {
         BRepOffset_RectoVerso,
     }
 
+    #[repr(u32)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum BRepExtrema_SupportType {
+        BRepExtrema_IsVertex,
+        BRepExtrema_IsOnEdge,
+        BRepExtrema_IsInFace,
+    }
+
     unsafe extern "C++" {
         // https://github.com/dtolnay/cxx/issues/280
 
@@ -1884,6 +1892,89 @@ pub mod ffi {
             shared: bool,
             wires: Pin<&mut HandleTopTools_HSequenceOfShape>,
         );
+
+        // BRepExtrema_DistShapeShape - Compute minimum distance between shapes
+        type BRepExtrema_DistShapeShape;
+        type BRepExtrema_SupportType;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepExtrema_DistShapeShape_ctor() -> UniquePtr<BRepExtrema_DistShapeShape>;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepExtrema_DistShapeShape_ctor_shapes(
+            shape1: &TopoDS_Shape,
+            shape2: &TopoDS_Shape,
+        ) -> UniquePtr<BRepExtrema_DistShapeShape>;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepExtrema_DistShapeShape_ctor_shapes_deflection(
+            shape1: &TopoDS_Shape,
+            shape2: &TopoDS_Shape,
+            deflection: f64,
+        ) -> UniquePtr<BRepExtrema_DistShapeShape>;
+
+        // Core methods
+        pub fn Perform(
+            self: Pin<&mut BRepExtrema_DistShapeShape>,
+            progress: &Message_ProgressRange,
+        ) -> bool;
+        pub fn LoadS1(self: Pin<&mut BRepExtrema_DistShapeShape>, shape: &TopoDS_Shape);
+        pub fn LoadS2(self: Pin<&mut BRepExtrema_DistShapeShape>, shape: &TopoDS_Shape);
+        pub fn SetDeflection(self: Pin<&mut BRepExtrema_DistShapeShape>, deflection: f64);
+        pub fn IsDone(self: &BRepExtrema_DistShapeShape) -> bool;
+        pub fn NbSolution(self: &BRepExtrema_DistShapeShape) -> i32;
+        pub fn Value(self: &BRepExtrema_DistShapeShape) -> f64;
+        pub fn InnerSolution(self: &BRepExtrema_DistShapeShape) -> bool;
+        pub fn SupportTypeShape1(
+            self: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> BRepExtrema_SupportType;
+        pub fn SupportTypeShape2(
+            self: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> BRepExtrema_SupportType;
+
+        // Wrapper functions for returning owned values
+        pub fn BRepExtrema_DistShapeShape_PointOnShape1(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> UniquePtr<gp_Pnt>;
+        pub fn BRepExtrema_DistShapeShape_PointOnShape2(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> UniquePtr<gp_Pnt>;
+        pub fn BRepExtrema_DistShapeShape_SupportOnShape1(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> UniquePtr<TopoDS_Shape>;
+        pub fn BRepExtrema_DistShapeShape_SupportOnShape2(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+        ) -> UniquePtr<TopoDS_Shape>;
+
+        // Parameter extraction
+        pub fn BRepExtrema_DistShapeShape_ParOnEdgeS1(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+            t: &mut f64,
+        ) -> bool;
+        pub fn BRepExtrema_DistShapeShape_ParOnEdgeS2(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+            t: &mut f64,
+        ) -> bool;
+        pub fn BRepExtrema_DistShapeShape_ParOnFaceS1(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+            u: &mut f64,
+            v: &mut f64,
+        ) -> bool;
+        pub fn BRepExtrema_DistShapeShape_ParOnFaceS2(
+            extrema: &BRepExtrema_DistShapeShape,
+            n: i32,
+            u: &mut f64,
+            v: &mut f64,
+        ) -> bool;
 
         // BndBox
         // Describes a bounding box in 3D space.

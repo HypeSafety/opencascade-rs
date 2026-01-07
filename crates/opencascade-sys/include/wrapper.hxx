@@ -8,6 +8,7 @@
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepAlgoAPI_Section.hxx>
 #include <BRepBndLib.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepBuilderAPI_GTransform.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -1289,4 +1290,93 @@ inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_from_vectors(
     get_occt_last_error_ref() = e.GetMessageString();
     return nullptr;
   }
+}
+
+// BRepExtrema_DistShapeShape - Compute minimum distance between shapes
+inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor() {
+  return std::unique_ptr<BRepExtrema_DistShapeShape>(new BRepExtrema_DistShapeShape());
+}
+
+inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes(
+    const TopoDS_Shape &shape1, const TopoDS_Shape &shape2
+) {
+  return std::unique_ptr<BRepExtrema_DistShapeShape>(
+    new BRepExtrema_DistShapeShape(shape1, shape2)
+  );
+}
+
+inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes_deflection(
+    const TopoDS_Shape &shape1, const TopoDS_Shape &shape2, Standard_Real deflection
+) {
+  return std::unique_ptr<BRepExtrema_DistShapeShape>(
+    new BRepExtrema_DistShapeShape(shape1, shape2, deflection)
+  );
+}
+
+inline std::unique_ptr<gp_Pnt> BRepExtrema_DistShapeShape_PointOnShape1(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n
+) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(extrema.PointOnShape1(n)));
+}
+
+inline std::unique_ptr<gp_Pnt> BRepExtrema_DistShapeShape_PointOnShape2(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n
+) {
+  return std::unique_ptr<gp_Pnt>(new gp_Pnt(extrema.PointOnShape2(n)));
+}
+
+inline std::unique_ptr<TopoDS_Shape> BRepExtrema_DistShapeShape_SupportOnShape1(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n
+) {
+  return std::unique_ptr<TopoDS_Shape>(new TopoDS_Shape(extrema.SupportOnShape1(n)));
+}
+
+inline std::unique_ptr<TopoDS_Shape> BRepExtrema_DistShapeShape_SupportOnShape2(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n
+) {
+  return std::unique_ptr<TopoDS_Shape>(new TopoDS_Shape(extrema.SupportOnShape2(n)));
+}
+
+// Edge parameter extraction - returns true if the support is an edge
+inline bool BRepExtrema_DistShapeShape_ParOnEdgeS1(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n, Standard_Real &t
+) {
+  if (extrema.SupportTypeShape1(n) == BRepExtrema_IsOnEdge) {
+    extrema.ParOnEdgeS1(n, t);
+    return true;
+  }
+  return false;
+}
+
+inline bool BRepExtrema_DistShapeShape_ParOnEdgeS2(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n, Standard_Real &t
+) {
+  if (extrema.SupportTypeShape2(n) == BRepExtrema_IsOnEdge) {
+    extrema.ParOnEdgeS2(n, t);
+    return true;
+  }
+  return false;
+}
+
+// Face UV parameter extraction - returns true if the support is a face
+inline bool BRepExtrema_DistShapeShape_ParOnFaceS1(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n,
+    Standard_Real &u, Standard_Real &v
+) {
+  if (extrema.SupportTypeShape1(n) == BRepExtrema_IsInFace) {
+    extrema.ParOnFaceS1(n, u, v);
+    return true;
+  }
+  return false;
+}
+
+inline bool BRepExtrema_DistShapeShape_ParOnFaceS2(
+    const BRepExtrema_DistShapeShape &extrema, Standard_Integer n,
+    Standard_Real &u, Standard_Real &v
+) {
+  if (extrema.SupportTypeShape2(n) == BRepExtrema_IsInFace) {
+    extrema.ParOnFaceS2(n, u, v);
+    return true;
+  }
+  return false;
 }

@@ -2,6 +2,7 @@ use thiserror::Error;
 
 pub mod angle;
 pub mod bounding_box;
+pub mod extrema;
 pub mod kicad;
 pub mod mesh;
 pub mod primitives;
@@ -36,4 +37,6 @@ pub enum Error {
     NotEnoughPoints,
     #[error("loft operation failed")]
     LoftFailed,
+    #[error("distance computation failed")]
+    DistanceComputationFailed,
 }
