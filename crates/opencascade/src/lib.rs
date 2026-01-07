@@ -39,4 +39,6 @@ pub enum Error {
     LoftFailed,
     #[error("distance computation failed")]
     DistanceComputationFailed,
+    #[error("shape offset operation failed")]
+    OffsetFailed,
 }

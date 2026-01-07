@@ -839,6 +839,48 @@ impl Shape {
         self.hollow(offset, faces_to_remove)
     }
 
+    /// Offset all faces of a solid shape by a given distance.
+    ///
+    /// - Positive offset: expand outward (thicken)
+    /// - Negative offset: shrink inward (thin)
+    ///
+    /// # Arguments
+    /// * `offset` - Distance to offset (mm). Negative shrinks the shape.
+    /// * `tolerance` - Approximation tolerance for curved surfaces.
+    ///
+    /// # Returns
+    /// A new shape offset from the original, or error if offset fails.
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Shrink a part by 1mm for collision tolerance
+    /// let shrunk = part.offset_3d(-1.0, 0.01)?;
+    /// ```
+    pub fn offset_3d(&self, offset: f64, tolerance: f64) -> Result<Self, Error> {
+        let mut maker = ffi::BRepOffsetAPI_MakeOffsetShape_ctor();
+        let progress = ffi::Message_ProgressRange_ctor();
+
+        ffi::BRepOffsetAPI_MakeOffsetShape_PerformByJoin(
+            maker.pin_mut(),
+            &self.inner,
+            offset,
+            tolerance,
+            ffi::BRepOffset_Mode::BRepOffset_Skin,
+            true,  // intersection - compute self-intersections
+            false, // selfInter - don't fail on self-intersection
+            ffi::GeomAbs_JoinType::GeomAbs_Arc, // Fillet corners
+            true,  // removeIntEdges - clean up internal edges
+        );
+
+        maker.pin_mut().Build(&progress);
+
+        if !maker.IsDone() {
+            return Err(Error::OffsetFailed);
+        }
+
+        Ok(Self::from_shape(maker.pin_mut().Shape()))
+    }
+
     /// Drill a cylindrical hole along the line defined by point `p`
     /// and direction `dir`, with `radius`.
     #[must_use]
@@ -873,6 +915,23 @@ impl Shape {
     ) -> Result<crate::extrema::DistanceResult, Error> {
         crate::extrema::distance_between_shapes(self, other)
     }
+
+    /// Compute volume properties of this shape.
+    ///
+    /// Returns a `VolumeProperties` struct containing the volume
+    /// and center of mass.
+    pub fn volume_properties(&self) -> VolumeProperties {
+        let mut props = ffi::GProp_GProps_ctor();
+        ffi::BRepGProp_VolumeProperties(&self.inner, props.pin_mut());
+
+        let volume = props.Mass();
+        let center = ffi::GProp_GProps_CentreOfMass(&props);
+
+        VolumeProperties {
+            volume,
+            center_of_mass: dvec3(center.X(), center.Y(), center.Z()),
+        }
+    }
 }
 
 /// Information about a point where a line hits (i.e. intersects) a face
@@ -887,6 +946,14 @@ pub struct LineFaceHitPoint {
     pub v: f64,
     /// The intersection point
     pub point: DVec3,
+}
+
+/// Volume properties of a shape
+pub struct VolumeProperties {
+    /// The volume of the shape
+    pub volume: f64,
+    /// The center of mass of the shape
+    pub center_of_mass: DVec3,
 }
 
 pub struct ChamferMaker {
@@ -906,5 +973,36 @@ impl ChamferMaker {
 
     pub fn build(mut self) -> Shape {
         Shape::from_shape(self.inner.pin_mut().Shape())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_offset_3d_shrink() {
+        let box1 = Shape::box_with_dimensions(10.0, 10.0, 10.0);
+        let shrunk = box1.offset_3d(-1.0, 0.01).unwrap();
+
+        // Original box: 10x10x10, volume = 1000
+        // Shrunk box: 8x8x8, volume = 512
+        let props = shrunk.volume_properties();
+        assert!((props.volume - 512.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_offset_3d_expand() {
+        let box1 = Shape::box_with_dimensions(10.0, 10.0, 10.0);
+        let expanded = box1.offset_3d(1.0, 0.01).unwrap();
+
+        // Original box: 10x10x10 = 1000
+        // Expanded box with Arc join: faces move out 1mm but corners/edges
+        // are filleted which results in slightly less volume than a sharp 12x12x12 box
+        let props = expanded.volume_properties();
+        // Volume should be significantly larger than original (1000)
+        assert!(props.volume > 1500.0);
+        // And close to but less than a sharp-cornered 12x12x12 (1728)
+        assert!(props.volume < 1750.0);
     }
 }
