@@ -33,6 +33,7 @@
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepOffsetAPI_MakeOffsetShape.hxx>
+#include <BRepOffset_MakeSimpleOffset.hxx>
 #include <BRepOffset_Mode.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepOffsetAPI_MakePipeShell.hxx>
@@ -1047,6 +1048,49 @@ inline void BRepOffsetAPI_MakeOffsetShape_PerformByJoin(
     Standard_Boolean removeIntEdges
 ) {
   maker.PerformByJoin(shape, offset, tolerance, mode, intersection, selfInter, join, removeIntEdges);
+}
+
+// BRepOffset_MakeSimpleOffset - Simple offset algorithm (better for complex shapes)
+inline std::unique_ptr<BRepOffset_MakeSimpleOffset> BRepOffset_MakeSimpleOffset_ctor() {
+  return std::unique_ptr<BRepOffset_MakeSimpleOffset>(new BRepOffset_MakeSimpleOffset());
+}
+
+inline void BRepOffset_MakeSimpleOffset_Initialize(
+    BRepOffset_MakeSimpleOffset &maker,
+    const TopoDS_Shape &shape,
+    Standard_Real offset
+) {
+  maker.Initialize(shape, offset);
+}
+
+inline void BRepOffset_MakeSimpleOffset_SetTolerance(
+    BRepOffset_MakeSimpleOffset &maker,
+    Standard_Real tolerance
+) {
+  maker.SetTolerance(tolerance);
+}
+
+inline void BRepOffset_MakeSimpleOffset_SetBuildSolidFlag(
+    BRepOffset_MakeSimpleOffset &maker,
+    Standard_Boolean buildSolid
+) {
+  maker.SetBuildSolidFlag(buildSolid);
+}
+
+inline void BRepOffset_MakeSimpleOffset_Perform(BRepOffset_MakeSimpleOffset &maker) {
+  maker.Perform();
+}
+
+inline Standard_Boolean BRepOffset_MakeSimpleOffset_IsDone(const BRepOffset_MakeSimpleOffset &maker) {
+  return maker.IsDone();
+}
+
+inline const TopoDS_Shape& BRepOffset_MakeSimpleOffset_GetResultShape(const BRepOffset_MakeSimpleOffset &maker) {
+  return maker.GetResultShape();
+}
+
+inline Standard_Integer BRepOffset_MakeSimpleOffset_GetError(const BRepOffset_MakeSimpleOffset &maker) {
+  return static_cast<Standard_Integer>(maker.GetError());
 }
 
 // Geom_Plane - Create a plane from gp_Ax3

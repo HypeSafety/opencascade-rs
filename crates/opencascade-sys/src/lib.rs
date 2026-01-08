@@ -1039,6 +1039,30 @@ pub mod ffi {
         );
         pub fn IsDone(self: &BRepOffsetAPI_MakeOffsetShape) -> bool;
 
+        // BRepOffset_MakeSimpleOffset - Simple offset algorithm (better for complex shapes)
+        type BRepOffset_MakeSimpleOffset;
+
+        pub fn BRepOffset_MakeSimpleOffset_ctor() -> UniquePtr<BRepOffset_MakeSimpleOffset>;
+        pub fn BRepOffset_MakeSimpleOffset_Initialize(
+            maker: Pin<&mut BRepOffset_MakeSimpleOffset>,
+            shape: &TopoDS_Shape,
+            offset: f64,
+        );
+        pub fn BRepOffset_MakeSimpleOffset_SetTolerance(
+            maker: Pin<&mut BRepOffset_MakeSimpleOffset>,
+            tolerance: f64,
+        );
+        pub fn BRepOffset_MakeSimpleOffset_SetBuildSolidFlag(
+            maker: Pin<&mut BRepOffset_MakeSimpleOffset>,
+            build_solid: bool,
+        );
+        pub fn BRepOffset_MakeSimpleOffset_Perform(maker: Pin<&mut BRepOffset_MakeSimpleOffset>);
+        pub fn BRepOffset_MakeSimpleOffset_IsDone(maker: &BRepOffset_MakeSimpleOffset) -> bool;
+        pub fn BRepOffset_MakeSimpleOffset_GetResultShape(
+            maker: &BRepOffset_MakeSimpleOffset,
+        ) -> &TopoDS_Shape;
+        pub fn BRepOffset_MakeSimpleOffset_GetError(maker: &BRepOffset_MakeSimpleOffset) -> i32;
+
         // Geom_Plane - Create a plane surface
         type Geom_Plane;
 

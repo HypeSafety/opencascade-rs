@@ -881,6 +881,41 @@ impl Shape {
         Ok(Self::from_shape(maker.pin_mut().Shape()))
     }
 
+    /// Offset a shape using the simple algorithm (better for complex shapes).
+    ///
+    /// This uses `BRepOffset_MakeSimpleOffset` which preserves topology and
+    /// works better on complex geometry that may fail with the standard offset.
+    ///
+    /// - Positive offset: expand outward
+    /// - Negative offset: shrink inward
+    ///
+    /// # Arguments
+    /// * `offset` - Distance to offset (mm). Negative shrinks the shape.
+    /// * `tolerance` - Tolerance for handling singularities.
+    ///
+    /// # Returns
+    /// A new shape offset from the original, or error if offset fails.
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Shrink a complex die shape by 1mm for collision tolerance
+    /// let shrunk = die_shape.offset_3d_simple(-1.0, 0.01)?;
+    /// ```
+    pub fn offset_3d_simple(&self, offset: f64, tolerance: f64) -> Result<Self, Error> {
+        let mut maker = ffi::BRepOffset_MakeSimpleOffset_ctor();
+
+        ffi::BRepOffset_MakeSimpleOffset_Initialize(maker.pin_mut(), &self.inner, offset);
+        ffi::BRepOffset_MakeSimpleOffset_SetTolerance(maker.pin_mut(), tolerance);
+        ffi::BRepOffset_MakeSimpleOffset_SetBuildSolidFlag(maker.pin_mut(), true);
+        ffi::BRepOffset_MakeSimpleOffset_Perform(maker.pin_mut());
+
+        if !ffi::BRepOffset_MakeSimpleOffset_IsDone(&maker) {
+            return Err(Error::OffsetFailed);
+        }
+
+        Ok(Self::from_shape(ffi::BRepOffset_MakeSimpleOffset_GetResultShape(&maker)))
+    }
+
     /// Drill a cylindrical hole along the line defined by point `p`
     /// and direction `dir`, with `radius`.
     #[must_use]
