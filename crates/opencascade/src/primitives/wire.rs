@@ -191,6 +191,25 @@ impl Wire {
         Self::from_wire(result_wire)
     }
 
+    /// Offset the wire by a given distance and join settings, returning an error if the operation fails.
+    ///
+    /// This is the fallible version of [`offset`](Self::offset) that checks if the operation
+    /// succeeded before returning the result.
+    pub fn try_offset(&self, distance: f64, join_type: JoinType) -> Result<Self, Error> {
+        let mut make_offset =
+            ffi::BRepOffsetAPI_MakeOffset_wire_ctor(&self.inner, join_type.into());
+        make_offset.pin_mut().Perform(distance, 0.0);
+
+        if !make_offset.IsDone() {
+            return Err(Error::OffsetFailed);
+        }
+
+        let offset_shape = make_offset.pin_mut().Shape();
+        let result_wire = ffi::TopoDS_cast_to_wire(offset_shape);
+
+        Ok(Self::from_wire(result_wire))
+    }
+
     /// Sweep the wire along a path to produce a shell
     #[must_use]
     pub fn sweep_along(&self, path: &Wire) -> Shell {
