@@ -191,6 +191,19 @@ impl Wire {
         Self::from_wire(result_wire)
     }
 
+    /// Clean the wire by unifying same-domain edges.
+    ///
+    /// This simplifies collinear edge chains and helps downstream operations
+    /// like 2D offset succeed on complex DXF profiles.
+    #[must_use]
+    pub fn clean(&self) -> Self {
+        let wire_shape = ffi::cast_wire_to_shape(&self.inner);
+        let cleaned = Shape::from_shape(wire_shape).clean();
+        let cleaned_wire = ffi::TopoDS_cast_to_wire(cleaned.inner());
+
+        Self::from_wire(cleaned_wire)
+    }
+
     /// Offset the wire by a given distance and join settings, returning an error if the operation fails.
     ///
     /// This is the fallible version of [`offset`](Self::offset) that checks if the operation
