@@ -1,6 +1,7 @@
 use thiserror::Error;
 
 pub mod angle;
+pub mod assembly;
 pub mod bounding_box;
 pub mod extrema;
 pub mod kicad;

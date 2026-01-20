@@ -114,6 +114,18 @@
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 
+// XDE/XCAF Includes for assembly structure support
+#include <TDocStd_Document.hxx>
+#include <TDF_Label.hxx>
+#include <TDF_LabelSequence.hxx>
+#include <TDataStd_Name.hxx>
+#include <XCAFApp_Application.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <STEPCAFControl_Reader.hxx>
+#include <TCollection_ExtendedString.hxx>
+#include <TCollection_AsciiString.hxx>
+
 // Generic template constructor
 template <typename T, typename... Args> std::unique_ptr<T> construct_unique(Args... args) {
   return std::unique_ptr<T>(new T(args...));
@@ -144,6 +156,12 @@ typedef opencascade::handle<Geom_CylindricalSurface> HandleGeom_CylindricalSurfa
 typedef opencascade::handle<Poly_Triangulation> HandlePoly_Triangulation;
 typedef opencascade::handle<TopTools_HSequenceOfShape> HandleTopTools_HSequenceOfShape;
 typedef opencascade::handle<Law_Function> HandleLawFunction;
+
+// XDE/XCAF Handle typedefs
+typedef opencascade::handle<TDocStd_Document> HandleTDocStd_Document;
+typedef opencascade::handle<XCAFDoc_ShapeTool> HandleXCAFDoc_ShapeTool;
+typedef opencascade::handle<TDataStd_Name> HandleTDataStd_Name;
+typedef opencascade::handle<XCAFApp_Application> HandleXCAFApp_Application;
 
 typedef opencascade::handle<TColgp_HArray1OfPnt> Handle_TColgpHArray1OfPnt;
 
@@ -1423,4 +1441,243 @@ inline bool BRepExtrema_DistShapeShape_ParOnFaceS2(
     return true;
   }
   return false;
+}
+
+// ============================================================================
+// XDE/XCAF Assembly Support
+// ============================================================================
+
+// XCAFApp_Application - Get the singleton application instance
+inline std::unique_ptr<HandleXCAFApp_Application> XCAFApp_Application_GetApplication() {
+  return std::unique_ptr<HandleXCAFApp_Application>(
+    new HandleXCAFApp_Application(XCAFApp_Application::GetApplication())
+  );
+}
+
+// Create a new XDE document
+inline std::unique_ptr<HandleTDocStd_Document> TDocStd_Document_ctor(rust::String format) {
+  opencascade::handle<TDocStd_Document> doc;
+  HandleXCAFApp_Application app = XCAFApp_Application::GetApplication();
+  app->NewDocument(format.c_str(), doc);
+  return std::unique_ptr<HandleTDocStd_Document>(new HandleTDocStd_Document(doc));
+}
+
+// Get the main label of the document
+inline std::unique_ptr<TDF_Label> TDocStd_Document_Main(const HandleTDocStd_Document &doc) {
+  return std::unique_ptr<TDF_Label>(new TDF_Label(doc->Main()));
+}
+
+// XCAFDoc_DocumentTool - Get the ShapeTool from a document label
+inline std::unique_ptr<HandleXCAFDoc_ShapeTool> XCAFDoc_DocumentTool_ShapeTool(const TDF_Label &label) {
+  return std::unique_ptr<HandleXCAFDoc_ShapeTool>(
+    new HandleXCAFDoc_ShapeTool(XCAFDoc_DocumentTool::ShapeTool(label))
+  );
+}
+
+// XCAFDoc_ShapeTool static methods - Get shape from label
+inline std::unique_ptr<TopoDS_Shape> XCAFDoc_ShapeTool_GetShape(const TDF_Label &label) {
+  return std::unique_ptr<TopoDS_Shape>(new TopoDS_Shape(XCAFDoc_ShapeTool::GetShape(label)));
+}
+
+// Get the location (transform) from a label
+inline std::unique_ptr<TopLoc_Location> XCAFDoc_ShapeTool_GetLocation(const TDF_Label &label) {
+  // For component labels, get the location from the label's Location attribute
+  return std::unique_ptr<TopLoc_Location>(new TopLoc_Location(XCAFDoc_ShapeTool::GetLocation(label)));
+}
+
+// Get free (top-level) shapes - populates the sequence with root shape labels
+inline void XCAFDoc_ShapeTool_GetFreeShapes(
+    const HandleXCAFDoc_ShapeTool &tool,
+    TDF_LabelSequence &labels
+) {
+  tool->GetFreeShapes(labels);
+}
+
+// Get components of an assembly
+inline bool XCAFDoc_ShapeTool_GetComponents(
+    const HandleXCAFDoc_ShapeTool &tool,
+    const TDF_Label &label,
+    TDF_LabelSequence &labels,
+    bool getSubChildren
+) {
+  return tool->GetComponents(label, labels, getSubChildren);
+}
+
+// Get the referred shape label (for component references)
+inline bool XCAFDoc_ShapeTool_GetReferredShape(
+    const HandleXCAFDoc_ShapeTool &tool,
+    const TDF_Label &label,
+    TDF_Label &refLabel
+) {
+  return tool->GetReferredShape(label, refLabel);
+}
+
+// Check if label is an assembly
+inline bool XCAFDoc_ShapeTool_IsAssembly(const HandleXCAFDoc_ShapeTool &tool, const TDF_Label &label) {
+  return tool->IsAssembly(label);
+}
+
+// Check if label is a component (instance reference)
+inline bool XCAFDoc_ShapeTool_IsComponent(const HandleXCAFDoc_ShapeTool &tool, const TDF_Label &label) {
+  return tool->IsComponent(label);
+}
+
+// Check if label is a shape
+inline bool XCAFDoc_ShapeTool_IsShape(const TDF_Label &label) {
+  return XCAFDoc_ShapeTool::IsShape(label);
+}
+
+// Check if label is a reference
+inline bool XCAFDoc_ShapeTool_IsReference(const HandleXCAFDoc_ShapeTool &tool, const TDF_Label &label) {
+  return tool->IsReference(label);
+}
+
+// Check if label is a simple shape (not assembly, not reference)
+inline bool XCAFDoc_ShapeTool_IsSimpleShape(const HandleXCAFDoc_ShapeTool &tool, const TDF_Label &label) {
+  return tool->IsSimpleShape(label);
+}
+
+// TDF_Label - Create empty label
+inline std::unique_ptr<TDF_Label> TDF_Label_ctor() {
+  return std::unique_ptr<TDF_Label>(new TDF_Label());
+}
+
+// Check if label is null
+inline bool TDF_Label_IsNull(const TDF_Label &label) {
+  return label.IsNull();
+}
+
+// Get name from label (via TDataStd_Name attribute)
+inline rust::String TDF_Label_GetName(const TDF_Label &label) {
+  opencascade::handle<TDataStd_Name> nameAttr;
+  if (label.FindAttribute(TDataStd_Name::GetID(), nameAttr)) {
+    TCollection_ExtendedString extStr = nameAttr->Get();
+    TCollection_AsciiString asciiStr(extStr);
+    return rust::String(asciiStr.ToCString());
+  }
+  return rust::String("");
+}
+
+// Copy a label
+inline std::unique_ptr<TDF_Label> TDF_Label_copy(const TDF_Label &label) {
+  return std::unique_ptr<TDF_Label>(new TDF_Label(label));
+}
+
+// TDF_LabelSequence - Create empty sequence
+inline std::unique_ptr<TDF_LabelSequence> TDF_LabelSequence_ctor() {
+  return std::unique_ptr<TDF_LabelSequence>(new TDF_LabelSequence());
+}
+
+// Get length of sequence
+inline Standard_Integer TDF_LabelSequence_Length(const TDF_LabelSequence &seq) {
+  return seq.Length();
+}
+
+// Get value at index (1-based!)
+inline std::unique_ptr<TDF_Label> TDF_LabelSequence_Value(const TDF_LabelSequence &seq, Standard_Integer index) {
+  return std::unique_ptr<TDF_Label>(new TDF_Label(seq.Value(index)));
+}
+
+// Clear the sequence
+inline void TDF_LabelSequence_Clear(TDF_LabelSequence &seq) {
+  seq.Clear();
+}
+
+// TopLoc_Location - Create identity location
+inline std::unique_ptr<TopLoc_Location> TopLoc_Location_Identity() {
+  return std::unique_ptr<TopLoc_Location>(new TopLoc_Location());
+}
+
+// Check if location is identity
+inline bool TopLoc_Location_IsIdentity(const TopLoc_Location &loc) {
+  return loc.IsIdentity();
+}
+
+// Multiply locations
+inline std::unique_ptr<TopLoc_Location> TopLoc_Location_Multiplied(
+    const TopLoc_Location &loc,
+    const TopLoc_Location &other
+) {
+  return std::unique_ptr<TopLoc_Location>(new TopLoc_Location(loc.Multiplied(other)));
+}
+
+// gp_Trsf extensions - Get translation part as a vector
+inline std::unique_ptr<gp_Vec> gp_Trsf_TranslationPart(const gp_Trsf &trsf) {
+  return std::unique_ptr<gp_Vec>(new gp_Vec(trsf.TranslationPart()));
+}
+
+// Get scale factor
+inline Standard_Real gp_Trsf_ScaleFactor(const gp_Trsf &trsf) {
+  return trsf.ScaleFactor();
+}
+
+// Get vectorial part as a 3x3 matrix (row-major: [R00, R01, R02, R10, R11, R12, R20, R21, R22])
+inline std::unique_ptr<std::vector<double>> gp_Trsf_VectorialPart(const gp_Trsf &trsf) {
+  auto result = std::unique_ptr<std::vector<double>>(new std::vector<double>(9));
+  // OCCT stores as 1-indexed row, col (1-3)
+  for (int row = 1; row <= 3; row++) {
+    for (int col = 1; col <= 3; col++) {
+      (*result)[(row - 1) * 3 + (col - 1)] = trsf.Value(row, col);
+    }
+  }
+  return result;
+}
+
+// Set the full transformation matrix (3x4 affine matrix)
+// Takes 12 values: [a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34]
+// where column 4 is the translation
+inline void gp_Trsf_SetValues(
+    gp_Trsf &trsf,
+    double a11, double a12, double a13, double a14,
+    double a21, double a22, double a23, double a24,
+    double a31, double a32, double a33, double a34
+) {
+  trsf.SetValues(a11, a12, a13, a14,
+                 a21, a22, a23, a24,
+                 a31, a32, a33, a34);
+}
+
+// STEPCAFControl_Reader - Create reader
+inline std::unique_ptr<STEPCAFControl_Reader> STEPCAFControl_Reader_ctor() {
+  return std::unique_ptr<STEPCAFControl_Reader>(new STEPCAFControl_Reader());
+}
+
+// Set name mode (whether to read names)
+inline void STEPCAFControl_Reader_SetNameMode(STEPCAFControl_Reader &reader, bool mode) {
+  reader.SetNameMode(mode);
+}
+
+// Set color mode (whether to read colors)
+inline void STEPCAFControl_Reader_SetColorMode(STEPCAFControl_Reader &reader, bool mode) {
+  reader.SetColorMode(mode);
+}
+
+// Set layer mode (whether to read layers)
+inline void STEPCAFControl_Reader_SetLayerMode(STEPCAFControl_Reader &reader, bool mode) {
+  reader.SetLayerMode(mode);
+}
+
+// Read STEP file
+inline IFSelect_ReturnStatus STEPCAFControl_Reader_ReadFile(
+    STEPCAFControl_Reader &reader,
+    rust::String path
+) {
+  return reader.ReadFile(path.c_str());
+}
+
+// Transfer to document
+inline bool STEPCAFControl_Reader_Transfer(
+    STEPCAFControl_Reader &reader,
+    HandleTDocStd_Document &doc
+) {
+  return reader.Transfer(doc);
+}
+
+// Handle IsNull checks for XDE handles
+inline bool HandleTDocStd_Document_IsNull(const HandleTDocStd_Document &handle) {
+  return handle.IsNull();
+}
+
+inline bool HandleXCAFDoc_ShapeTool_IsNull(const HandleXCAFDoc_ShapeTool &handle) {
+  return handle.IsNull();
 }

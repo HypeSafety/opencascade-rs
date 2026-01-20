@@ -2027,6 +2027,129 @@ pub mod ffi {
         type BRepBndLib;
 
         pub fn BRepBndLib_Add(shape: &TopoDS_Shape, bb: Pin<&mut Bnd_Box>, use_triangulation: bool);
+
+        // ========================================================================
+        // XDE/XCAF Assembly Support
+        // ========================================================================
+
+        // XDE Handle types
+        type HandleTDocStd_Document;
+        type HandleXCAFDoc_ShapeTool;
+        type HandleXCAFApp_Application;
+
+        // XDE Label and sequence types
+        type TDF_Label;
+        type TDF_LabelSequence;
+
+        // STEPCAFControl_Reader - STEP reader with XDE support
+        type STEPCAFControl_Reader;
+
+        // XCAFApp_Application - Get the singleton application instance
+        pub fn XCAFApp_Application_GetApplication() -> UniquePtr<HandleXCAFApp_Application>;
+
+        // TDocStd_Document - Create a new XDE document
+        pub fn TDocStd_Document_ctor(format: String) -> UniquePtr<HandleTDocStd_Document>;
+        pub fn TDocStd_Document_Main(doc: &HandleTDocStd_Document) -> UniquePtr<TDF_Label>;
+
+        // Handle null checks
+        pub fn HandleTDocStd_Document_IsNull(handle: &HandleTDocStd_Document) -> bool;
+        pub fn HandleXCAFDoc_ShapeTool_IsNull(handle: &HandleXCAFDoc_ShapeTool) -> bool;
+
+        // XCAFDoc_DocumentTool - Get ShapeTool from document
+        pub fn XCAFDoc_DocumentTool_ShapeTool(label: &TDF_Label) -> UniquePtr<HandleXCAFDoc_ShapeTool>;
+
+        // XCAFDoc_ShapeTool - Shape tool methods
+        pub fn XCAFDoc_ShapeTool_GetShape(label: &TDF_Label) -> UniquePtr<TopoDS_Shape>;
+        pub fn XCAFDoc_ShapeTool_GetLocation(label: &TDF_Label) -> UniquePtr<TopLoc_Location>;
+        pub fn XCAFDoc_ShapeTool_GetFreeShapes(
+            tool: &HandleXCAFDoc_ShapeTool,
+            labels: Pin<&mut TDF_LabelSequence>,
+        );
+        pub fn XCAFDoc_ShapeTool_GetComponents(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+            labels: Pin<&mut TDF_LabelSequence>,
+            get_sub_children: bool,
+        ) -> bool;
+        pub fn XCAFDoc_ShapeTool_GetReferredShape(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+            ref_label: Pin<&mut TDF_Label>,
+        ) -> bool;
+        pub fn XCAFDoc_ShapeTool_IsAssembly(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+        ) -> bool;
+        pub fn XCAFDoc_ShapeTool_IsComponent(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+        ) -> bool;
+        pub fn XCAFDoc_ShapeTool_IsShape(label: &TDF_Label) -> bool;
+        pub fn XCAFDoc_ShapeTool_IsReference(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+        ) -> bool;
+        pub fn XCAFDoc_ShapeTool_IsSimpleShape(
+            tool: &HandleXCAFDoc_ShapeTool,
+            label: &TDF_Label,
+        ) -> bool;
+
+        // TDF_Label - Label methods
+        #[cxx_name = "construct_unique"]
+        pub fn TDF_Label_ctor() -> UniquePtr<TDF_Label>;
+        pub fn TDF_Label_IsNull(label: &TDF_Label) -> bool;
+        pub fn TDF_Label_GetName(label: &TDF_Label) -> String;
+        pub fn TDF_Label_copy(label: &TDF_Label) -> UniquePtr<TDF_Label>;
+
+        // TDF_LabelSequence - Label sequence methods
+        #[cxx_name = "construct_unique"]
+        pub fn TDF_LabelSequence_ctor() -> UniquePtr<TDF_LabelSequence>;
+        pub fn TDF_LabelSequence_Length(seq: &TDF_LabelSequence) -> i32;
+        pub fn TDF_LabelSequence_Value(seq: &TDF_LabelSequence, index: i32) -> UniquePtr<TDF_Label>;
+        pub fn TDF_LabelSequence_Clear(seq: Pin<&mut TDF_LabelSequence>);
+
+        // TopLoc_Location - Additional location methods
+        pub fn TopLoc_Location_Identity() -> UniquePtr<TopLoc_Location>;
+        pub fn TopLoc_Location_IsIdentity(loc: &TopLoc_Location) -> bool;
+        pub fn TopLoc_Location_Multiplied(
+            loc: &TopLoc_Location,
+            other: &TopLoc_Location,
+        ) -> UniquePtr<TopLoc_Location>;
+
+        // gp_Trsf - Additional transform methods
+        pub fn gp_Trsf_TranslationPart(trsf: &gp_Trsf) -> UniquePtr<gp_Vec>;
+        pub fn gp_Trsf_ScaleFactor(trsf: &gp_Trsf) -> f64;
+        pub fn gp_Trsf_VectorialPart(trsf: &gp_Trsf) -> UniquePtr<CxxVector<f64>>;
+        pub fn gp_Trsf_SetValues(
+            trsf: Pin<&mut gp_Trsf>,
+            a11: f64, a12: f64, a13: f64, a14: f64,
+            a21: f64, a22: f64, a23: f64, a24: f64,
+            a31: f64, a32: f64, a33: f64, a34: f64,
+        );
+
+        // STEPCAFControl_Reader - STEP reader with assembly support
+        #[cxx_name = "construct_unique"]
+        pub fn STEPCAFControl_Reader_ctor() -> UniquePtr<STEPCAFControl_Reader>;
+        pub fn STEPCAFControl_Reader_SetNameMode(
+            reader: Pin<&mut STEPCAFControl_Reader>,
+            mode: bool,
+        );
+        pub fn STEPCAFControl_Reader_SetColorMode(
+            reader: Pin<&mut STEPCAFControl_Reader>,
+            mode: bool,
+        );
+        pub fn STEPCAFControl_Reader_SetLayerMode(
+            reader: Pin<&mut STEPCAFControl_Reader>,
+            mode: bool,
+        );
+        pub fn STEPCAFControl_Reader_ReadFile(
+            reader: Pin<&mut STEPCAFControl_Reader>,
+            path: String,
+        ) -> IFSelect_ReturnStatus;
+        pub fn STEPCAFControl_Reader_Transfer(
+            reader: Pin<&mut STEPCAFControl_Reader>,
+            doc: Pin<&mut HandleTDocStd_Document>,
+        ) -> bool;
     }
 }
 
