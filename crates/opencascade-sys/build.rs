@@ -29,6 +29,8 @@ const OCCT_LIBS: &[&str] = &[
     "TKCDF",    // CDM_Document and related
     "TKCAF",
     "TKLCAF",
+    "TKHLR",    // Hidden Line Removal (required by TKV3d)
+    "TKService", // Basic visualization services (required by TKV3d)
     "TKV3d",    // TPrsStd_Driver and TPrsStd_DriverTable
     "TKXCAF",
 ];
