@@ -31,7 +31,6 @@ const OCCT_LIBS: &[&str] = &[
     "TKLCAF",
     "TKV3d",    // TPrsStd_Driver and TPrsStd_DriverTable
     "TKXCAF",
-    "TKXDEStep", // XCAF STEP reading
 ];
 
 fn main() {
