@@ -2,8 +2,8 @@ use crate::{
     mesh::{Mesh, Mesher},
     primitives::{
         make_axis_1, make_axis_2, make_dir, make_point, make_point2d, make_vec, BooleanShape,
-        Compound, Edge, EdgeIterator, Face, FaceIterator, ShapeType, Shell, Solid, Vertex,
-        VertexIterator, Wire,
+        Compound, Edge, EdgeIterator, Face, FaceIterator, ShapeType, Shell, Solid, SolidIterator,
+        Vertex, VertexIterator, Wire,
     },
     Error,
 };
@@ -732,6 +732,15 @@ impl Shape {
     pub fn faces(&self) -> FaceIterator {
         let explorer = ffi::TopExp_Explorer_ctor(&self.inner, ffi::TopAbs_ShapeEnum::TopAbs_FACE);
         FaceIterator { explorer }
+    }
+
+    /// Iterate over all solid bodies in the shape.
+    ///
+    /// This is useful for detecting compound shapes that contain multiple
+    /// distinct solid bodies (e.g., STEP assembly files).
+    pub fn solids(&self) -> SolidIterator {
+        let explorer = ffi::TopExp_Explorer_ctor(&self.inner, ffi::TopAbs_ShapeEnum::TopAbs_SOLID);
+        SolidIterator { explorer }
     }
 
     /// Return all edges connected to a given vertex in this shape.

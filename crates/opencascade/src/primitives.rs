@@ -173,6 +173,27 @@ pub struct FaceIterator {
     explorer: UniquePtr<ffi::TopExp_Explorer>,
 }
 
+pub struct SolidIterator {
+    explorer: UniquePtr<ffi::TopExp_Explorer>,
+}
+
+impl Iterator for SolidIterator {
+    type Item = Solid;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.explorer.More() {
+            let solid = ffi::TopoDS_cast_to_solid(self.explorer.Current());
+            let solid = Solid::from_solid(solid);
+
+            self.explorer.pin_mut().Next();
+
+            Some(solid)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Direction {
     PosX,
