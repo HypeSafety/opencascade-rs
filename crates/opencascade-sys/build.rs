@@ -26,9 +26,12 @@ const OCCT_LIBS: &[&str] = &[
     "TKBO",
     "TKOffset",
     "TKXSBase",
+    "TKCDF",    // CDM_Document and related
     "TKCAF",
     "TKLCAF",
+    "TKV3d",    // TPrsStd_Driver and TPrsStd_DriverTable
     "TKXCAF",
+    "TKXDEStep", // XCAF STEP reading
 ];
 
 fn main() {
