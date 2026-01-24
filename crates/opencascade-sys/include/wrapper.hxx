@@ -7,6 +7,7 @@
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepAlgoAPI_Section.hxx>
+#include <BRepAlgoAPI_Splitter.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepBuilderAPI_GTransform.hxx>
@@ -213,6 +214,7 @@ inline std::unique_ptr<HandleGeomPlane> new_HandleGeomPlane_from_HandleGeomSurfa
 
 // Collections
 inline void shape_list_append_face(TopTools_ListOfShape &list, const TopoDS_Face &face) { list.Append(face); }
+inline void shape_list_append_shape(TopTools_ListOfShape &list, const TopoDS_Shape &shape) { list.Append(shape); }
 
 // Geometry
 inline const gp_Pnt &handle_geom_plane_location(const HandleGeomPlane &plane) { return plane->Location(); }
@@ -646,6 +648,21 @@ inline const TopoDS_Shape &TopTools_HSequenceOfShape_value(const HandleTopTools_
 inline std::unique_ptr<BRepAlgoAPI_BuilderAlgo>
 cast_section_to_builderalgo(std::unique_ptr<BRepAlgoAPI_Section> section) {
   return section;
+}
+
+// BRepAlgoAPI_Splitter - Split shapes by tool shapes
+inline std::unique_ptr<BRepAlgoAPI_Splitter> BRepAlgoAPI_Splitter_ctor() {
+  return std::unique_ptr<BRepAlgoAPI_Splitter>(new BRepAlgoAPI_Splitter());
+}
+
+inline void BRepAlgoAPI_Splitter_SetArguments(BRepAlgoAPI_Splitter &splitter,
+                                               const TopTools_ListOfShape &args) {
+  splitter.SetArguments(args);
+}
+
+inline void BRepAlgoAPI_Splitter_SetTools(BRepAlgoAPI_Splitter &splitter,
+                                           const TopTools_ListOfShape &tools) {
+  splitter.SetTools(tools);
 }
 // namespace BRepAlgoAPI
 

@@ -181,6 +181,7 @@ pub mod ffi {
         #[cxx_name = "construct_unique"]
         pub fn new_list_of_shape() -> UniquePtr<TopTools_ListOfShape>;
         pub fn shape_list_append_face(list: Pin<&mut TopTools_ListOfShape>, face: &TopoDS_Face);
+        pub fn shape_list_append_shape(list: Pin<&mut TopTools_ListOfShape>, shape: &TopoDS_Shape);
         pub fn Size(self: &TopTools_ListOfShape) -> i32;
 
         #[cxx_name = "list_to_vector"]
@@ -1290,6 +1291,25 @@ pub mod ffi {
         pub fn cast_section_to_builderalgo(
             section: UniquePtr<BRepAlgoAPI_Section>,
         ) -> UniquePtr<BRepAlgoAPI_BuilderAlgo>;
+
+        type BRepAlgoAPI_Splitter;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepAlgoAPI_Splitter_ctor() -> UniquePtr<BRepAlgoAPI_Splitter>;
+
+        pub fn BRepAlgoAPI_Splitter_SetArguments(
+            splitter: Pin<&mut BRepAlgoAPI_Splitter>,
+            args: &TopTools_ListOfShape,
+        );
+
+        pub fn BRepAlgoAPI_Splitter_SetTools(
+            splitter: Pin<&mut BRepAlgoAPI_Splitter>,
+            tools: &TopTools_ListOfShape,
+        );
+
+        pub fn Build(self: Pin<&mut BRepAlgoAPI_Splitter>, progress: &Message_ProgressRange);
+        pub fn IsDone(self: &BRepAlgoAPI_Splitter) -> bool;
+        pub fn Shape(self: Pin<&mut BRepAlgoAPI_Splitter>) -> &TopoDS_Shape;
 
         // Geometric processor
         type gp_Ax1;
