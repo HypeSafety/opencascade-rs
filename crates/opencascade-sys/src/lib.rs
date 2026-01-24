@@ -624,6 +624,11 @@ pub mod ffi {
             surface: &HandleGeomSurface,
             edge_tolerance: f64,
         ) -> UniquePtr<BRepBuilderAPI_MakeFace>;
+        pub fn BRepBuilderAPI_MakeFace_surface_wire(
+            surface: &HandleGeomSurface,
+            wire: &TopoDS_Wire,
+            inside: bool,
+        ) -> UniquePtr<BRepBuilderAPI_MakeFace>;
 
         pub fn Face(self: &BRepBuilderAPI_MakeFace) -> &TopoDS_Face;
         pub fn Shape(self: Pin<&mut BRepBuilderAPI_MakeFace>) -> &TopoDS_Shape;

@@ -1265,6 +1265,14 @@ inline void BRepBuilderAPI_MakeFace_Add(BRepBuilderAPI_MakeFace &maker, const To
   maker.Add(wire);
 }
 
+// BRepBuilderAPI_MakeFace - Create face on surface bounded by wire
+inline std::unique_ptr<BRepBuilderAPI_MakeFace> BRepBuilderAPI_MakeFace_surface_wire(
+    const HandleGeomSurface &surface, const TopoDS_Wire &wire, bool inside
+) {
+  return std::unique_ptr<BRepBuilderAPI_MakeFace>(
+      new BRepBuilderAPI_MakeFace(surface, wire, inside));
+}
+
 // BRepBuilderAPI_MakeEdge - Create edge from curve with parameter bounds
 inline std::unique_ptr<BRepBuilderAPI_MakeEdge> BRepBuilderAPI_MakeEdge_HandleGeomCurve_with_params(
     const HandleGeomCurve &curve, Standard_Real p1, Standard_Real p2
