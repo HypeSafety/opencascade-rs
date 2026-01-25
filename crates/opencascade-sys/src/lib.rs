@@ -1342,6 +1342,12 @@ pub mod ffi {
         #[cxx_name = "construct_unique"]
         pub fn gp_Ax3_from_gp_Ax2(axis: &gp_Ax2) -> UniquePtr<gp_Ax3>;
 
+        pub fn gp_Ax3_ctor(
+            origin: &gp_Pnt,
+            direction: &gp_Dir,
+            x_direction: &gp_Dir,
+        ) -> UniquePtr<gp_Ax3>;
+
         #[cxx_name = "construct_unique"]
         pub fn gp_Dir_ctor(x: f64, y: f64, z: f64) -> UniquePtr<gp_Dir>;
 

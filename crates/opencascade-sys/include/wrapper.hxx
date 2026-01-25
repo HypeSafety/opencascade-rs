@@ -327,6 +327,15 @@ inline std::unique_ptr<gp_Ax3> gp_Ax3_from_gp_Ax2(const gp_Ax2 &axis) {
   return std::unique_ptr<gp_Ax3>(new gp_Ax3(axis));
 }
 
+// gp_Ax3 constructor with origin, Z direction, and X direction
+inline std::unique_ptr<gp_Ax3> gp_Ax3_ctor(
+    const gp_Pnt &origin,
+    const gp_Dir &direction,
+    const gp_Dir &x_direction
+) {
+    return std::unique_ptr<gp_Ax3>(new gp_Ax3(origin, direction, x_direction));
+}
+
 inline std::unique_ptr<gp_Dir> gp_Dir_ctor(double x, double y, double z) {
   return std::unique_ptr<gp_Dir>(new gp_Dir(x, y, z));
 }
