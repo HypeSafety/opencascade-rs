@@ -34,6 +34,12 @@ impl Face {
         &self.inner
     }
 
+    /// Convert this face to a Shape.
+    pub fn as_shape(&self) -> Shape {
+        let inner_shape = ffi::cast_face_to_shape(&self.inner);
+        Shape::from_shape(inner_shape)
+    }
+
     /// Check if two faces refer to the same underlying TopoDS face.
     pub fn is_same(&self, other: &Face) -> bool {
         ffi::TopoDS_Face_IsSame(self.inner(), other.inner())
