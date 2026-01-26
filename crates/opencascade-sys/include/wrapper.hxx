@@ -267,6 +267,18 @@ HandleGeom2d_TrimmedCurve_to_curve(const HandleGeom2d_TrimmedCurve &trimmed_curv
   return std::unique_ptr<HandleGeom2d_Curve>(new opencascade::handle<Geom2d_Curve>(trimmed_curve));
 }
 
+// Geom2d_Line constructor - creates a line from origin point and direction
+inline std::unique_ptr<HandleGeom2d_Line> Geom2d_Line_ctor(const gp_Pnt2d &origin, const gp_Dir2d &direction) {
+  return std::unique_ptr<HandleGeom2d_Line>(
+      new opencascade::handle<Geom2d_Line>(new Geom2d_Line(origin, direction)));
+}
+
+// Upcast HandleGeom2d_Line to HandleGeom2d_Curve
+inline std::unique_ptr<HandleGeom2d_Curve>
+HandleGeom2d_Line_to_HandleGeom2d_Curve(const HandleGeom2d_Line &line) {
+  return std::unique_ptr<HandleGeom2d_Curve>(new opencascade::handle<Geom2d_Curve>(line));
+}
+
 inline std::unique_ptr<gp_Pnt2d> ellipse_value(const HandleGeom2d_Ellipse &ellipse, double u) {
   return std::unique_ptr<gp_Pnt2d>(new gp_Pnt2d(ellipse->Value(u)));
 }

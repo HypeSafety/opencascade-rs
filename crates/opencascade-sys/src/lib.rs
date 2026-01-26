@@ -1096,7 +1096,14 @@ pub mod ffi {
         // Geom2d_Curve type detection - returns type name string
         pub fn Geom2d_Curve_DynamicType(curve: &HandleGeom2d_Curve) -> String;
 
-        // Geom2d_Line - downcast and accessors
+        // Geom2d_Line - constructor, downcast and accessors
+        pub fn Geom2d_Line_ctor(
+            origin: &gp_Pnt2d,
+            direction: &gp_Dir2d,
+        ) -> UniquePtr<HandleGeom2d_Line>;
+        pub fn HandleGeom2d_Line_to_HandleGeom2d_Curve(
+            line: &HandleGeom2d_Line,
+        ) -> UniquePtr<HandleGeom2d_Curve>;
         pub fn HandleGeom2d_Curve_to_Line(
             curve: &HandleGeom2d_Curve,
         ) -> UniquePtr<HandleGeom2d_Line>;
