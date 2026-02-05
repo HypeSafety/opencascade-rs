@@ -1786,6 +1786,10 @@ pub mod ffi {
         pub fn Shape(self: &BRepMesh_IncrementalMesh) -> &TopoDS_Shape;
         pub fn IsDone(self: &BRepMesh_IncrementalMesh) -> bool;
 
+        // Global parallel meshing setting
+        pub fn BRepMesh_SetParallelDefault(is_parallel: bool);
+        pub fn BRepMesh_IsParallelDefault() -> bool;
+
         type TopLoc_Location;
         #[cxx_name = "construct_unique"]
         pub fn TopLoc_Location_ctor() -> UniquePtr<TopLoc_Location>;

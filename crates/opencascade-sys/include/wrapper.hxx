@@ -1757,3 +1757,16 @@ inline bool HandleTDocStd_Document_IsNull(const HandleTDocStd_Document &handle) 
 inline bool HandleXCAFDoc_ShapeTool_IsNull(const HandleXCAFDoc_ShapeTool &handle) {
   return handle.IsNull();
 }
+
+// ============================================================================
+// Global Parallel Processing Settings
+// ============================================================================
+
+// Enable/disable parallel meshing globally (affects BRepMesh_IncrementalMesh)
+inline void BRepMesh_SetParallelDefault(Standard_Boolean theIsParallel) {
+  BRepMesh_IncrementalMesh::SetParallelDefault(theIsParallel);
+}
+
+inline Standard_Boolean BRepMesh_IsParallelDefault() {
+  return BRepMesh_IncrementalMesh::IsParallelDefault();
+}

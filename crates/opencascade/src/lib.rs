@@ -6,6 +6,7 @@ pub mod bounding_box;
 pub mod extrema;
 pub mod kicad;
 pub mod mesh;
+pub mod parallel;
 pub mod primitives;
 pub mod section;
 pub mod workplane;
