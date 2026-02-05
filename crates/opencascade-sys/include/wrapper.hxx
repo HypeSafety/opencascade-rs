@@ -1402,23 +1402,53 @@ inline std::unique_ptr<HandleGeomBSplineCurve> Geom_BSplineCurve_from_vectors(
 
 // BRepExtrema_DistShapeShape - Compute minimum distance between shapes
 inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor() {
-  return std::unique_ptr<BRepExtrema_DistShapeShape>(new BRepExtrema_DistShapeShape());
+  auto extrema = std::unique_ptr<BRepExtrema_DistShapeShape>(new BRepExtrema_DistShapeShape());
+  extrema->SetMultiThread(Standard_True);  // Enable parallel computation
+  return extrema;
 }
 
 inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes(
     const TopoDS_Shape &shape1, const TopoDS_Shape &shape2
 ) {
-  return std::unique_ptr<BRepExtrema_DistShapeShape>(
+  auto extrema = std::unique_ptr<BRepExtrema_DistShapeShape>(
     new BRepExtrema_DistShapeShape(shape1, shape2)
   );
+  // Note: Cannot enable multi-thread here as computation already ran in constructor
+  return extrema;
 }
 
 inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes_deflection(
     const TopoDS_Shape &shape1, const TopoDS_Shape &shape2, Standard_Real deflection
 ) {
-  return std::unique_ptr<BRepExtrema_DistShapeShape>(
+  auto extrema = std::unique_ptr<BRepExtrema_DistShapeShape>(
     new BRepExtrema_DistShapeShape(shape1, shape2, deflection)
   );
+  // Note: Cannot enable multi-thread here as computation already ran in constructor
+  return extrema;
+}
+
+// Multi-threaded versions - use deferred computation pattern
+inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes_multithread(
+    const TopoDS_Shape &shape1, const TopoDS_Shape &shape2
+) {
+  auto extrema = std::unique_ptr<BRepExtrema_DistShapeShape>(new BRepExtrema_DistShapeShape());
+  extrema->SetMultiThread(Standard_True);
+  extrema->LoadS1(shape1);
+  extrema->LoadS2(shape2);
+  extrema->Perform();
+  return extrema;
+}
+
+inline std::unique_ptr<BRepExtrema_DistShapeShape> BRepExtrema_DistShapeShape_ctor_shapes_deflection_multithread(
+    const TopoDS_Shape &shape1, const TopoDS_Shape &shape2, Standard_Real deflection
+) {
+  auto extrema = std::unique_ptr<BRepExtrema_DistShapeShape>(new BRepExtrema_DistShapeShape());
+  extrema->SetMultiThread(Standard_True);
+  extrema->SetDeflection(deflection);
+  extrema->LoadS1(shape1);
+  extrema->LoadS2(shape2);
+  extrema->Perform();
+  return extrema;
 }
 
 inline std::unique_ptr<gp_Pnt> BRepExtrema_DistShapeShape_PointOnShape1(

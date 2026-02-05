@@ -1975,6 +1975,20 @@ pub mod ffi {
             deflection: f64,
         ) -> UniquePtr<BRepExtrema_DistShapeShape>;
 
+        // Multi-threaded versions (use OCCT's thread pool for parallel computation)
+        #[cxx_name = "construct_unique"]
+        pub fn BRepExtrema_DistShapeShape_ctor_shapes_multithread(
+            shape1: &TopoDS_Shape,
+            shape2: &TopoDS_Shape,
+        ) -> UniquePtr<BRepExtrema_DistShapeShape>;
+
+        #[cxx_name = "construct_unique"]
+        pub fn BRepExtrema_DistShapeShape_ctor_shapes_deflection_multithread(
+            shape1: &TopoDS_Shape,
+            shape2: &TopoDS_Shape,
+            deflection: f64,
+        ) -> UniquePtr<BRepExtrema_DistShapeShape>;
+
         // Core methods
         pub fn Perform(
             self: Pin<&mut BRepExtrema_DistShapeShape>,

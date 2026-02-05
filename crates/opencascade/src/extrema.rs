@@ -107,6 +107,25 @@ pub struct DistanceResult {
 /// println!("Distance: {}", result.distance);
 /// ```
 pub fn distance_between_shapes(shape1: &Shape, shape2: &Shape) -> Result<DistanceResult, Error> {
+    // Use multi-threaded version by default for better performance
+    let extrema =
+        ffi::BRepExtrema_DistShapeShape_ctor_shapes_multithread(&shape1.inner, &shape2.inner);
+
+    if !extrema.IsDone() {
+        return Err(Error::DistanceComputationFailed);
+    }
+
+    extract_result(&extrema)
+}
+
+/// Compute the minimum distance between two shapes (single-threaded version).
+///
+/// Use this if you're already in a multi-threaded context and want to avoid
+/// thread pool contention, or for debugging purposes.
+pub fn distance_between_shapes_single_thread(
+    shape1: &Shape,
+    shape2: &Shape,
+) -> Result<DistanceResult, Error> {
     let extrema = ffi::BRepExtrema_DistShapeShape_ctor_shapes(&shape1.inner, &shape2.inner);
 
     if !extrema.IsDone() {
@@ -121,6 +140,8 @@ pub fn distance_between_shapes(shape1: &Shape, shape2: &Shape) -> Result<Distanc
 /// The deflection parameter controls the precision for curved surfaces.
 /// Smaller values give more accurate results but take longer to compute.
 ///
+/// Uses multi-threaded computation by default.
+///
 /// # Arguments
 /// * `shape1` - First shape
 /// * `shape2` - Second shape
@@ -130,7 +151,8 @@ pub fn distance_between_shapes_with_deflection(
     shape2: &Shape,
     deflection: f64,
 ) -> Result<DistanceResult, Error> {
-    let extrema = ffi::BRepExtrema_DistShapeShape_ctor_shapes_deflection(
+    // Use multi-threaded version by default for better performance
+    let extrema = ffi::BRepExtrema_DistShapeShape_ctor_shapes_deflection_multithread(
         &shape1.inner,
         &shape2.inner,
         deflection,
